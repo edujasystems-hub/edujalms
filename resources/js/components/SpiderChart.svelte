@@ -145,6 +145,8 @@
         <!-- Vertex Dots & Interactive Points -->
         {#each vertexCoordinates as vertex, i}
             <g
+                role="group"
+                aria-label="{vertex.subject}: {vertex.score}"
                 class="cursor-pointer group"
                 onmouseenter={() => (hoveredIndex = i)}
                 onmouseleave={() => (hoveredIndex = null)}
@@ -172,6 +174,8 @@
             {@const isRight = vertex.lx > center + 10}
             {@const textAnchor = isRight ? "start" : isLeft ? "end" : "middle"}
             <g
+                role="group"
+                aria-label="{vertex.subject}: {vertex.score}"
                 class="cursor-pointer"
                 onmouseenter={() => (hoveredIndex = i)}
                 onmouseleave={() => (hoveredIndex = null)}
