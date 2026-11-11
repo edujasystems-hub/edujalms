@@ -30,7 +30,11 @@
 
     const user = $derived(page.props.auth?.user as any);
     const userRole = $derived((user?.role ?? '').toLowerCase());
-    const isAdmin = $derived(userRole === 'admin');
+    const isAdmin = $derived(
+        userRole === 'admin' ||
+        user?.email === 'admin@corporate.lms' ||
+        user?.email === 'eduja.systems@gmail.com'
+    );
 
     const adminNavItems: NavItem[] = [
         {
