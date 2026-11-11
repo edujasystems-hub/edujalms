@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import RichTextEditor from '@/components/RichTextEditor.svelte';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import Users from '@lucide/svelte/icons/users';
     import Plus from '@lucide/svelte/icons/plus';
@@ -524,7 +525,7 @@
 <!-- Modal: Tambah / Edit Pelajaran (dengan Pre-Test & Post-Test builder) -->
 {#if isLessonModalOpen}
     <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+        <div class="bg-card border border-border rounded-2xl w-full max-w-[95vw] md:w-[80vw] md:max-w-[80vw] max-h-[92vh] overflow-y-auto p-6 md:p-8 shadow-2xl space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-border/80">
                 <h3 class="text-base font-bold text-foreground">
                     {editingLesson ? 'Edit Pelajaran' : 'Tambah Pelajaran Baru'}
@@ -624,15 +625,14 @@
                     </div>
                 {/if}
 
-                <!-- Text Content -->
+                <!-- Modul / Materi Pembelajaran (Rich-Text Editor) -->
                 <div>
-                    <label class="block font-semibold text-foreground mb-1">Catatan / Rangkuman Teks</label>
-                    <textarea
-                        rows="3"
-                        placeholder="Materi ringkas atau catatan pembelajaran..."
+                    <RichTextEditor
                         bind:value={lessonForm.content_text}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
-                    ></textarea>
+                        label="Modul Bacaan & Materi Pelajaran"
+                        placeholder="Tuliskan materi pembelajaran, modul bacaan, rangkuman, atau instruksi lengkap di sini..."
+                        minHeight="260px"
+                    />
                 </div>
 
                 <!-- PRE-TEST BUILDER (Opsional) -->

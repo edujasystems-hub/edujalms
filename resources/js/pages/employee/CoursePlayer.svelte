@@ -127,6 +127,24 @@
 
     const embedVideoUrl = $derived(getYouTubeEmbedUrl(activeLesson?.video_url));
 
+    function formatLessonContent(raw: string | null | undefined): string {
+        if (!raw) return '';
+        if (/<[a-z][\s\S]*>/i.test(raw)) {
+            return raw;
+        }
+        return raw
+            .split('\n')
+            .map((line) => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('### ')) return `<h3>${trimmed.slice(4)}</h3>`;
+                if (trimmed.startsWith('## ')) return `<h2>${trimmed.slice(3)}</h2>`;
+                if (trimmed.startsWith('# ')) return `<h1>${trimmed.slice(2)}</h1>`;
+                if (trimmed === '') return '<p><br></p>';
+                return `<p>${line}</p>`;
+            })
+            .join('');
+    }
+
     let isSubmitting = $state(false);
 
     // Pre-Test Interactivity State
@@ -487,8 +505,8 @@
                             <FileText class="size-4 text-indigo-600" />
                             <span>Modul Bacaan & Ringkasan Materi:</span>
                         </div>
-                        <div class="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed whitespace-pre-line">
-                            {activeLesson.content_text}
+                        <div class="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:my-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-500 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_code]:text-indigo-600 dark:[&_code]:text-indigo-400 [&_a]:text-indigo-600 [&_a]:underline">
+                            {@html formatLessonContent(activeLesson.content_text)}
                         </div>
                     </div>
                 {/if}
