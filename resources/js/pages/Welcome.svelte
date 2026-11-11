@@ -107,21 +107,32 @@
                         <span class="text-[11px] text-muted-foreground font-mono">password</span>
                     </div>
                     <div>
-                        <div class="font-bold text-foreground text-sm">Alexander Pratama</div>
-                        <div class="text-xs text-muted-foreground">admin@corporate.lms</div>
+                        <div class="font-bold text-foreground text-sm">Eduja System (Super Admin)</div>
+                        <div class="text-xs text-muted-foreground">eduja.systems@gmail.com</div>
                     </div>
                     <p class="text-xs text-muted-foreground leading-relaxed">
                         Kelola data kelas, materi video/audio/PDF, instruktur, perusahaan klien, serta undang karyawan dan atur group akses.
                     </p>
-                    <button
-                        type="button"
-                        onclick={() => loginAs('admin@corporate.lms')}
-                        disabled={isLoggingIn}
-                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
-                    >
-                        <span>{isLoggingIn ? 'Masuk...' : 'Masuk sebagai Admin'}</span>
-                        <ArrowRight class="size-3.5" />
-                    </button>
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            onclick={() => loginAs('eduja.systems@gmail.com')}
+                            disabled={isLoggingIn}
+                            class="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
+                        >
+                            <span>{isLoggingIn ? 'Masuk...' : 'Masuk sebagai Eduja Admin'}</span>
+                            <ArrowRight class="size-3.5" />
+                        </button>
+                        <button
+                            type="button"
+                            onclick={() => loginAs('admin@corporate.lms')}
+                            disabled={isLoggingIn}
+                            title="Atau masuk sebagai Alexander Pratama (admin@corporate.lms)"
+                            class="px-2.5 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-medium transition-colors"
+                        >
+                            Alt Admin
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Demo Card: Employee -->

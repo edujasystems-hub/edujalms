@@ -7,11 +7,8 @@
     import Layers from '@lucide/svelte/icons/layers';
     import LayoutGrid from '@lucide/svelte/icons/layout-grid';
     import Users from '@lucide/svelte/icons/users';
-    import Compass from '@lucide/svelte/icons/compass';
-    import Sparkles from '@lucide/svelte/icons/sparkles';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
-    import NavFooter from '@/components/NavFooter.svelte';
     import NavMain from '@/components/NavMain.svelte';
     import NavUser from '@/components/NavUser.svelte';
     import {
@@ -32,7 +29,8 @@
     } = $props();
 
     const user = $derived(page.props.auth?.user as any);
-    const isAdmin = $derived(user?.role === 'admin');
+    const userRole = $derived((user?.role ?? '').toLowerCase());
+    const isAdmin = $derived(userRole === 'admin');
 
     const adminNavItems: NavItem[] = [
         {
@@ -51,17 +49,17 @@
             icon: Layers,
         },
         {
-            title: 'Tutor',
+            title: 'Tutor & Instruktur',
             href: '/admin/tutors',
             icon: Award,
         },
         {
-            title: 'Perusahaan',
+            title: 'Perusahaan Klien',
             href: '/admin/companies',
             icon: Building2,
         },
         {
-            title: 'Karyawan & Akses',
+            title: 'Karyawan & Hak Akses',
             href: '/admin/employees',
             icon: Users,
         },
@@ -74,13 +72,11 @@
             icon: LayoutGrid,
         },
         {
-            title: 'Kelas Saya',
+            title: 'Katalog & Kelas Saya',
             href: '/my-courses',
             icon: BookOpen,
         },
     ];
-
-    const navItems = $derived(isAdmin ? adminNavItems : employeeNavItems);
 </script>
 
 <Sidebar collapsible="icon" variant="inset">
@@ -102,43 +98,30 @@
         </SidebarMenu>
     </SidebarHeader>
 
-    <SidebarContent>
-        <NavMain items={navItems} />
-
+    <SidebarContent class="py-2">
         {#if isAdmin}
-            <div class="px-4 py-2 mt-4 border-t border-sidebar-border/50">
-                <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Portal Karyawan</span>
-                <div class="mt-2 space-y-1">
-                    <Link
-                        href="/my-summary"
-                        class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md transition-colors"
-                    >
-                        <Compass class="size-3.5 text-indigo-500" />
-                        <span>Pratinjau My Summary</span>
-                    </Link>
-                    <Link
-                        href="/my-courses"
-                        class="flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-md transition-colors"
-                    >
-                        <Sparkles class="size-3.5 text-amber-500" />
-                        <span>Pratinjau Kelas Saya</span>
-                    </Link>
-                </div>
+            <NavMain items={adminNavItems} label="Pengelolaan LMS" />
+
+            <div class="mt-4 pt-2 border-t border-sidebar-border/60">
+                <NavMain items={employeeNavItems} label="Portal Karyawan" />
             </div>
+        {:else}
+            <NavMain items={employeeNavItems} label="Portal Pembelajaran" />
         {/if}
     </SidebarContent>
 
     <SidebarFooter>
         <div class="px-3 py-2 text-xs text-muted-foreground border-b border-sidebar-border/50 mb-1">
             <div class="flex items-center justify-between">
-                <span class="font-medium text-sidebar-foreground">Role:</span>
-                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold {isAdmin ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}">
-                    {user?.role?.toUpperCase() ?? 'GUEST'}
+                <span class="font-medium text-sidebar-foreground">Peran Aktif:</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase {isAdmin ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 ring-1 ring-indigo-500/30' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500/30'}">
+                    {isAdmin ? 'ADMINISTRATOR' : (user?.role?.toUpperCase() ?? 'KARYAWAN')}
                 </span>
             </div>
             {#if user?.company}
-                <div class="truncate text-[11px] mt-1 text-sidebar-foreground/70">
-                    🏢 {user.company.name}
+                <div class="truncate text-[11px] mt-1.5 text-sidebar-foreground/80 flex items-center gap-1.5">
+                    <span>🏢</span>
+                    <span class="truncate font-medium">{user.company.name}</span>
                 </div>
             {/if}
         </div>

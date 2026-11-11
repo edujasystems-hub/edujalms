@@ -13,21 +13,34 @@
 
     let {
         items = [],
+        label = 'Platform',
     }: {
         items: NavItem[];
+        label?: string;
     } = $props();
 
     const url = currentUrlState();
+
+    function isItemActive(href: any): boolean {
+        const urlStr = toUrl(href);
+        if (urlStr === '/dashboard' || urlStr === '/my-summary' || urlStr === '/my-courses') {
+            return url.isCurrentUrl(href, url.currentUrl);
+        }
+        return url.isCurrentOrParentUrl(href, url.currentUrl);
+    }
 </script>
 
 <SidebarGroup class="px-2 py-0">
-    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+    {#if label}
+        <SidebarGroupLabel>{label}</SidebarGroupLabel>
+    {/if}
     <SidebarMenu>
         {#each items as item (toUrl(item.href))}
+            {@const Icon = item.icon}
             <SidebarMenuItem>
                 <SidebarMenuButton
                     asChild
-                    isActive={url.isCurrentUrl(item.href, url.currentUrl)}
+                    isActive={isItemActive(item.href)}
                     tooltip={item.title}
                 >
                     {#snippet children(props)}
@@ -36,8 +49,8 @@
                             href={toUrl(item.href)}
                             class={props.class}
                         >
-                            {#if item.icon}
-                                <item.icon class="size-4 shrink-0" />
+                            {#if Icon}
+                                <Icon class="size-4 shrink-0" />
                             {/if}
                             <span>{item.title}</span>
                         </Link>
@@ -47,3 +60,4 @@
         {/each}
     </SidebarMenu>
 </SidebarGroup>
+

@@ -24,10 +24,14 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
+        $email = strtolower($input['email']);
+        $role = (str_contains($email, 'admin') || str_contains($email, 'eduja')) ? 'admin' : 'employee';
+
         return User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            'role' => $role,
         ]);
     }
 }

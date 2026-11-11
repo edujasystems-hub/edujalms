@@ -445,7 +445,7 @@ Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan
             'is_preview' => true,
         ]);
 
-        // 6. Users: 1 Admin and Employees
+        // 6. Users: Admins and Employees
         $admin = User::create([
             'name' => 'Alexander Pratama',
             'email' => 'admin@corporate.lms',
@@ -456,6 +456,27 @@ Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan
             'department' => 'Human Capital',
             'avatar' => 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=160&auto=format&fit=crop&q=80',
             'phone' => '+62 811 1122 3344',
+            'email_verified_at' => Carbon::now(),
+            'competency_scores' => [
+                'Kepemimpinan' => 95,
+                'Komunikasi' => 92,
+                'Pemecahan Masalah' => 90,
+                'Keahlian Teknis' => 88,
+                'Manajemen Proyek' => 94,
+                'Literasi Data & AI' => 90,
+            ],
+        ]);
+
+        $edujaAdmin = User::create([
+            'name' => 'Eduja System',
+            'email' => 'eduja.systems@gmail.com',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'company_id' => $companyTelkom->id,
+            'position' => 'Super Administrator LMS',
+            'department' => 'Executive Office',
+            'avatar' => 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80',
+            'phone' => '+62 811 0000 1234',
             'email_verified_at' => Carbon::now(),
             'competency_scores' => [
                 'Kepemimpinan' => 95,
