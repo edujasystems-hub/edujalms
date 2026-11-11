@@ -13,7 +13,11 @@ class EnsureAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user() || ! $request->user()->isAdmin()) {
+        if (! $request->user()) {
+            return redirect()->route('login');
+        }
+
+        if (! $request->user()->isAdmin()) {
             return redirect()->route('dashboard')->with('error', 'Akses ditolak. Halaman ini hanya untuk Administrator.');
         }
 

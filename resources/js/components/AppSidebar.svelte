@@ -67,7 +67,7 @@
 
     const employeeNavItems: NavItem[] = [
         {
-            title: 'Summary',
+            title: 'Dashboard',
             href: '/my-summary',
             icon: LayoutGrid,
         },

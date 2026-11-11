@@ -27,26 +27,35 @@
     import Plus from '@lucide/svelte/icons/plus';
 
     interface Stats {
-        total_companies: number;
-        total_employees: number;
-        total_courses: number;
-        total_lessons: number;
-        total_groups: number;
-        total_enrollments: number;
-        completed_enrollments: number;
-        completion_rate: number;
+        total_companies?: number;
+        total_employees?: number;
+        total_courses?: number;
+        total_lessons?: number;
+        total_groups?: number;
+        total_enrollments?: number;
+        completed_enrollments?: number;
+        completion_rate?: number;
     }
 
     let {
-        stats,
+        stats = {
+            total_companies: 0,
+            total_employees: 0,
+            total_courses: 0,
+            total_lessons: 0,
+            total_groups: 0,
+            total_enrollments: 0,
+            completed_enrollments: 0,
+            completion_rate: 0,
+        },
         recentCourses = [],
         recentEnrollments = [],
         classGroups = [],
     }: {
-        stats: Stats;
-        recentCourses: any[];
-        recentEnrollments: any[];
-        classGroups: any[];
+        stats?: Stats;
+        recentCourses?: any[];
+        recentEnrollments?: any[];
+        classGroups?: any[];
     } = $props();
 </script>
 

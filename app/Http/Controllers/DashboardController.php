@@ -15,11 +15,11 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request): Response|\Illuminate\Http\RedirectResponse
+    public function index(Request $request): Response
     {
         $user = $request->user();
 
-        if ($user->isEmployee()) {
+        if ($user && $user->isEmployee()) {
             return app(SummaryController::class)->index($request);
         }
 

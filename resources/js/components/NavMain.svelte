@@ -23,8 +23,8 @@
 
     function isItemActive(href: any): boolean {
         const urlStr = toUrl(href);
-        if (urlStr === '/dashboard' || urlStr === '/my-summary' || urlStr === '/my-courses') {
-            return url.isCurrentUrl(href, url.currentUrl);
+        if (urlStr === '/dashboard' || urlStr === '/admin/dashboard' || urlStr === '/my-summary' || urlStr === '/my-courses') {
+            return url.isCurrentUrl(href, url.currentUrl) || (urlStr === '/admin/dashboard' && url.currentUrl === '/dashboard');
         }
         return url.isCurrentOrParentUrl(href, url.currentUrl);
     }

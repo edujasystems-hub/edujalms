@@ -20,6 +20,9 @@ test('admin can view admin dashboard and manage lms', function () {
     $response = $this->actingAs($admin)->get('/dashboard');
     $response->assertStatus(200);
 
+    $adminDash = $this->actingAs($admin)->get('/admin/dashboard');
+    $adminDash->assertStatus(200);
+
     $coursesResponse = $this->actingAs($admin)->get('/admin/courses');
     $coursesResponse->assertStatus(200);
 

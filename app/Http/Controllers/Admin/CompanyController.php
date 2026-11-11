@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Models\Course;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,8 +28,24 @@ class CompanyController extends Controller
 
         $companies = $query->latest()->get();
 
+        // Summary and Statistics
+        $totalCompanies = Company::count();
+        $activeCompanies = Company::where('is_active', true)->count();
+        $totalEmployees = User::whereNotNull('company_id')->where('role', 'employee')->count();
+        $totalCourses = Course::whereNotNull('company_id')->count();
+
+        $stats = [
+            'total_companies' => $totalCompanies,
+            'active_companies' => $activeCompanies,
+            'inactive_companies' => $totalCompanies - $activeCompanies,
+            'total_employees' => $totalEmployees,
+            'total_courses' => $totalCourses,
+            'avg_employees_per_company' => $totalCompanies > 0 ? round($totalEmployees / $totalCompanies, 1) : 0,
+        ];
+
         return Inertia::render('admin/companies/Index', [
             'companies' => $companies,
+            'stats' => $stats,
             'filters' => [
                 'search' => $request->search ?? '',
             ],
