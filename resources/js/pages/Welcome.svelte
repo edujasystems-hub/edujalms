@@ -37,17 +37,13 @@
     <!-- Navbar -->
     <header class="w-full border-b border-border/80 bg-background/80 backdrop-blur-md sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="size-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30">
-                    <GraduationCap class="size-5" />
-                </div>
-                <div>
-                    <span class="font-extrabold text-base tracking-tight text-foreground">Eduja</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-semibold ml-1.5">
-                        Corporate LMS
-                    </span>
-                </div>
-            </div>
+            <Link href="/" class="flex items-center gap-2">
+                <img
+                    src="/images/logo.png"
+                    alt="Eduja Learning Media"
+                    class="h-9 w-auto object-contain"
+                />
+            </Link>
 
             <nav class="flex items-center gap-3">
                 {#if auth?.user}

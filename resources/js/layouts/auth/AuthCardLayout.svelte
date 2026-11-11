@@ -30,11 +30,11 @@
             href={home()}
             class="flex items-center gap-2 self-center font-medium"
         >
-            <div class="flex h-9 w-9 items-center justify-center">
-                <AppLogoIcon
-                    class="size-9 fill-current text-black dark:text-white"
-                />
-            </div>
+            <img
+                src="/images/logo.png"
+                alt="Eduja Learning Media"
+                class="h-12 w-auto object-contain hover:opacity-95 transition-opacity"
+            />
         </Link>
 
         <div class="flex flex-col gap-6">

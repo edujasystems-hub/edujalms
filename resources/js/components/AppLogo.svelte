@@ -1,15 +1,20 @@
 <script lang="ts">
-    import { page } from '@inertiajs/svelte';
-    import AppLogoIcon from '@/components/AppLogoIcon.svelte';
-
-    const name = $derived(page.props.name);
+    let {
+        class: className = '',
+    }: {
+        class?: string;
+    } = $props();
 </script>
 
-<div
-    class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
->
-    <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
-</div>
-<div class="ml-1 grid flex-1 text-left text-sm">
-    <span class="mb-0.5 truncate leading-tight font-semibold">{name}</span>
+<div class="flex items-center gap-2 min-w-0 {className}">
+    <img
+        src="/images/logo.png"
+        alt="Eduja Learning Media"
+        class="h-8 max-h-9 w-auto max-w-[180px] object-contain group-data-[collapsible=icon]:hidden"
+    />
+    <img
+        src="/images/logo-icon.png"
+        alt="Eduja"
+        class="size-7 mx-auto object-contain hidden group-data-[collapsible=icon]:block"
+    />
 </div>

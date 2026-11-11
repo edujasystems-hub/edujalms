@@ -25,18 +25,16 @@
                     href={home()}
                     class="flex flex-col items-center gap-2 font-medium"
                 >
-                    <div
-                        class="mb-1 flex h-9 w-9 items-center justify-center rounded-md"
-                    >
-                        <AppLogoIcon
-                            class="size-9 fill-current text-(--foreground) dark:text-white"
-                        />
-                    </div>
+                    <img
+                        src="/images/logo.png"
+                        alt="Eduja Learning Media"
+                        class="h-14 md:h-16 w-auto object-contain hover:opacity-95 transition-opacity"
+                    />
                     <span class="sr-only">{title}</span>
                 </Link>
-                <div class="space-y-2 text-center">
-                    <h1 class="text-xl font-medium">{title}</h1>
-                    <p class="text-center text-sm text-muted-foreground">
+                <div class="space-y-1.5 text-center">
+                    <h1 class="text-xl font-bold tracking-tight text-foreground">{title}</h1>
+                    <p class="text-center text-xs text-muted-foreground">
                         {description}
                     </p>
                 </div>
