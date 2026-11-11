@@ -29,6 +29,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/learn/{slug}', [CoursePlayerController::class, 'show'])->name('employee.learn.show');
     Route::post('/learn/{course}/lessons/{lesson}/toggle', [CoursePlayerController::class, 'toggleLessonComplete'])
         ->name('employee.learn.toggle');
+    Route::post('/learn/{course}/complete', [CoursePlayerController::class, 'completeCourse'])
+        ->name('employee.learn.complete');
 
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {

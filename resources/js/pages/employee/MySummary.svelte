@@ -17,6 +17,7 @@
     import { Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import SpiderChart from '@/components/SpiderChart.svelte';
+    import CertificateModal from '@/components/CertificateModal.svelte';
     import Award from '@lucide/svelte/icons/award';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -58,6 +59,8 @@
         total_lessons: number;
         completed_lessons: number;
         last_accessed_at?: string;
+        completed_at?: string | null;
+        certificate_code?: string;
     }
 
     interface Widgets {
@@ -86,6 +89,14 @@
         competencies: Competency[];
         employee: any;
     } = $props();
+
+    let isCertModalOpen = $state(false);
+    let selectedCertCourse = $state<RecentClass | null>(null);
+
+    function openCertificate(c: RecentClass) {
+        selectedCertCourse = c;
+        isCertModalOpen = true;
+    }
 
     function formatLevel(lvl: string) {
         switch (lvl) {
@@ -170,8 +181,8 @@
             </div>
             <div class="mt-2">
                 <div class="text-2xl font-extrabold text-foreground">{widgets.completed_courses}</div>
-                <div class="text-[11px] text-muted-foreground mt-0.5">
-                    Modul terselesaikan
+                <div class="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{widgets.completed_courses} Sertifikat</span> diperoleh
                 </div>
             </div>
         </div>
@@ -341,13 +352,25 @@
                                                 {/if}
                                             </div>
 
-                                            <Link
-                                                href="/learn/{course.slug}"
-                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all {course.progress_percent === 100 ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs'}"
-                                            >
-                                                <PlayCircle class="size-3.5" />
-                                                <span>{course.progress_percent === 100 ? 'Review' : 'Lanjutkan'}</span>
-                                            </Link>
+                                            <div class="flex items-center gap-1.5">
+                                                {#if course.progress_percent === 100 || course.status === 'completed'}
+                                                    <button
+                                                        type="button"
+                                                        onclick={() => openCertificate(course)}
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-colors shadow-2xs"
+                                                    >
+                                                        <Award class="size-3.5" />
+                                                        <span>Sertifikat</span>
+                                                    </button>
+                                                {/if}
+                                                <Link
+                                                    href="/learn/{course.slug}"
+                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all {course.progress_percent === 100 ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs'}"
+                                                >
+                                                    <PlayCircle class="size-3.5" />
+                                                    <span>{course.progress_percent === 100 ? 'Review' : 'Lanjutkan'}</span>
+                                                </Link>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -362,29 +385,39 @@
         <div class="lg:col-span-5 space-y-4">
             <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
                 <div class="flex items-center justify-between pb-3 border-b border-border/50">
-                    <h2 class="text-sm font-bold text-foreground flex items-center gap-2">
-                        <Sparkles class="size-4 text-indigo-600" />
-                        <span>Radar Kompetensi</span>
-                    </h2>
-                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                        Skor: {widgets.average_competency}
+                    <div>
+                        <h2 class="text-sm font-bold text-foreground flex items-center gap-2">
+                            <Sparkles class="size-4 text-indigo-600" />
+                            <span>Radar Kompetensi Karyawan</span>
+                        </h2>
+                        <p class="text-[11px] text-muted-foreground mt-0.5">Pemetaan 6 dimensi keahlian profesional</p>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">
+                        Rata-rata: {widgets.average_competency}
                     </span>
                 </div>
 
                 <!-- Spider Chart Visualization -->
-                <div class="pt-2 flex justify-center">
-                    <SpiderChart {competencies} size={300} />
+                <div class="pt-3 pb-1 flex justify-center overflow-visible">
+                    <SpiderChart {competencies} size={380} />
                 </div>
 
                 <!-- Detailed Breakdown List -->
-                <div class="mt-3 pt-3 border-t border-border/50 space-y-2">
+                <div class="mt-2 pt-3 border-t border-border/50 space-y-2">
+                    <div class="flex items-center justify-between text-[11px] font-semibold text-muted-foreground px-1">
+                        <span>Dimensi Kompetensi</span>
+                        <span>Level Penguasaan</span>
+                    </div>
                     {#each competencies as comp}
-                        <div>
+                        <div class="p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
                             <div class="flex items-center justify-between text-xs mb-1">
-                                <span class="font-medium text-foreground/80">{comp.subject}</span>
-                                <span class="font-mono font-bold {comp.score >= 85 ? 'text-emerald-600' : comp.score >= 75 ? 'text-indigo-600' : 'text-amber-600'}">
-                                    {comp.score}
-                                </span>
+                                <span class="font-semibold text-foreground">{comp.subject}</span>
+                                <div class="flex items-center gap-1.5 font-mono">
+                                    <span class="font-bold {comp.score >= 85 ? 'text-emerald-600 dark:text-emerald-400' : comp.score >= 75 ? 'text-indigo-600 dark:text-indigo-400' : 'text-amber-600 dark:text-amber-400'}">
+                                        {comp.score}
+                                    </span>
+                                    <span class="text-[10px] text-muted-foreground">/100</span>
+                                </div>
                             </div>
                             <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
                                 <div
@@ -399,3 +432,13 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Sertifikat Kelulusan Resmi -->
+<CertificateModal
+    isOpen={isCertModalOpen}
+    course={selectedCertCourse}
+    user={employee}
+    completedAt={selectedCertCourse?.completed_at}
+    certificateCode={selectedCertCourse?.certificate_code}
+    onClose={() => (isCertModalOpen = false)}
+/>

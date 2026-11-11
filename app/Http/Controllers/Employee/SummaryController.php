@@ -65,7 +65,7 @@ class SummaryController extends Controller
             ->select('course_id', DB::raw('count(*) as count'))
             ->pluck('count', 'course_id');
 
-        $recentClasses = $recentEnrollments->map(function ($enrollment) use ($coursesById, $userCompletedLessonCounts) {
+        $recentClasses = $recentEnrollments->map(function ($enrollment) use ($user, $coursesById, $userCompletedLessonCounts) {
             $course = $coursesById->get($enrollment->course_id);
             if (! $course) {
                 return null;
@@ -98,6 +98,8 @@ class SummaryController extends Controller
                 'status' => $enrollment->status,
                 'enrollment_source' => $enrollment->enrollment_source,
                 'last_accessed_at' => $enrollment->last_accessed_at,
+                'completed_at' => $enrollment->completed_at ? \Illuminate\Support\Carbon::parse($enrollment->completed_at)->translatedFormat('d F Y') : null,
+                'certificate_code' => 'EDJ-LMS-' . str_pad($course->id, 3, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT) . '-' . ($enrollment->completed_at ? date('Ymd', strtotime($enrollment->completed_at)) : date('Ymd')),
                 'total_lessons' => $course->lessons_count,
                 'completed_lessons' => $userCompletedLessonCounts->get($course->id, 0),
             ];

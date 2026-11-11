@@ -99,6 +99,17 @@ class CoursePlayerController extends Controller
         $completedCount = count($completedLessonIds);
         $progressPercent = $totalLessons > 0 ? round(($completedCount / $totalLessons) * 100) : 0;
 
+        $enrollment = DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        $isCompleted = ($enrollment && $enrollment->status === 'completed') || ($totalLessons > 0 && $completedCount >= $totalLessons);
+        $completedAt = $enrollment && $enrollment->completed_at
+            ? \Illuminate\Support\Carbon::parse($enrollment->completed_at)->translatedFormat('d F Y')
+            : ($isCompleted ? now()->translatedFormat('d F Y') : null);
+        $certificateCode = 'EDJ-LMS-' . str_pad($course->id, 3, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT) . '-' . ($enrollment && $enrollment->completed_at ? date('Ymd', strtotime($enrollment->completed_at)) : date('Ymd'));
+
         return Inertia::render('employee/CoursePlayer', [
             'course' => [
                 'id' => $course->id,
@@ -115,6 +126,16 @@ class CoursePlayerController extends Controller
                 'progress_percent' => $progressPercent,
                 'total_lessons' => $totalLessons,
                 'completed_lessons' => $completedCount,
+                'is_completed' => $isCompleted,
+                'completed_at' => $completedAt,
+                'certificate_code' => $certificateCode,
+            ],
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'job_title' => $user->job_title ?? $user->position,
+                'department' => $user->department,
+                'company' => $user->company ? ['name' => $user->company->name] : null,
             ],
             'lessons' => $lessonsFormatted,
             'activeLesson' => $activeLesson ? [
@@ -220,5 +241,61 @@ class CoursePlayerController extends Controller
             : "Status pelajaran diubah menjadi belum selesai.";
 
         return back()->with('success', $msg);
+    }
+
+    public function completeCourse(Request $request, Course $course): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->hasAccessToCourse($course)) {
+            abort(403);
+        }
+
+        // Mark all lessons completed
+        foreach ($course->lessons as $lesson) {
+            DB::table('lesson_user')->updateOrInsert(
+                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
+                [
+                    'course_id' => $course->id,
+                    'is_completed' => true,
+                    'completed_at' => now(),
+                    'last_watched_seconds' => $lesson->duration_minutes * 60,
+                    'updated_at' => now(),
+                ]
+            );
+        }
+
+        // Mark course completed in course_user
+        DB::table('course_user')->updateOrInsert(
+            ['user_id' => $user->id, 'course_id' => $course->id],
+            [
+                'progress_percent' => 100,
+                'status' => 'completed',
+                'completed_at' => now(),
+                'last_accessed_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+
+        // Competency score boost
+        if ($course->competency_impact) {
+            $userScores = $user->competency_scores ?? [
+                'Kepemimpinan' => 75,
+                'Komunikasi' => 80,
+                'Pemecahan Masalah' => 85,
+                'Keahlian Teknis' => 85,
+                'Manajemen Proyek' => 75,
+                'Literasi Data & AI' => 80,
+            ];
+            foreach ($course->competency_impact as $compKey => $impactVal) {
+                if (isset($userScores[$compKey])) {
+                    $userScores[$compKey] = min(100, $userScores[$compKey] + 2);
+                }
+            }
+            $user->competency_scores = $userScores;
+            $user->save();
+        }
+
+        return back()->with('success', "Selamat! Anda telah menandai kelas '{$course->title}' selesai dan berhak atas Sertifikat Kelulusan Resmi.");
     }
 }

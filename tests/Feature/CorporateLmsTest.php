@@ -136,3 +136,29 @@ test('non-admin is prevented from accessing admin panel', function () {
     $response = $this->actingAs($employee)->get('/admin/courses');
     $response->assertRedirect('/dashboard');
 });
+
+test('employee can mark course complete and receive certificate data', function () {
+    $employee = User::where('role', 'employee')->first();
+    $course = Course::first();
+
+    $response = $this->actingAs($employee)->post("/learn/{$course->id}/complete");
+    $response->assertRedirect();
+
+    $enrollment = DB::table('course_user')
+        ->where('user_id', $employee->id)
+        ->where('course_id', $course->id)
+        ->first();
+
+    expect($enrollment->status)->toBe('completed');
+    expect((int) $enrollment->progress_percent)->toBe(100);
+    expect($enrollment->completed_at)->not->toBeNull();
+
+    // Verify player response has certificate details
+    $playerResponse = $this->actingAs($employee)->get("/learn/{$course->slug}");
+    $playerResponse->assertInertia(fn ($page) => $page
+        ->component('employee/CoursePlayer')
+        ->where('course.is_completed', true)
+        ->has('course.certificate_code')
+        ->has('course.completed_at')
+    );
+});

@@ -20,6 +20,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import CertificateModal from '@/components/CertificateModal.svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
     import ArrowRight from '@lucide/svelte/icons/arrow-right';
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -88,11 +89,31 @@
         course,
         lessons = [],
         activeLesson,
+        user = null,
     }: {
         course: any;
         lessons: LessonItem[];
         activeLesson: ActiveLesson | null;
+        user?: any;
     } = $props();
+
+    let isCertificateOpen = $state(false);
+    let isCompletingCourse = $state(false);
+
+    function completeEntireCourse() {
+        if (!confirm(`Tandai seluruh kelas '${course.title}' sebagai selesai dan buka Sertifikat Kelulusan Resmi?`)) {
+            return;
+        }
+        isCompletingCourse = true;
+        router.post(`/learn/${course.id}/complete`, {}, {
+            onSuccess: () => {
+                isCertificateOpen = true;
+            },
+            onFinish: () => {
+                isCompletingCourse = false;
+            },
+        });
+    }
 
     function formatDate(dateStr?: string | null) {
         if (!dateStr) return '';
@@ -256,29 +277,73 @@
             </div>
         </div>
 
-        <!-- Course Progress Pill -->
-        <div class="flex items-center gap-4 bg-card border border-border/80 px-4 py-2.5 rounded-xl shadow-xs shrink-0">
-            <div class="space-y-1 min-w-[130px]">
+        <!-- Course Progress & Action Pill -->
+        <div class="flex items-center gap-3 bg-card border border-border/80 px-4 py-2.5 rounded-xl shadow-xs shrink-0">
+            <div class="space-y-1 min-w-[120px]">
                 <div class="flex justify-between text-xs">
                     <span class="font-medium text-muted-foreground">Progress Kelas</span>
-                    <span class="font-mono font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
+                    <span class="font-mono font-bold {course.is_completed || course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
                         {course.progress_percent}%
                     </span>
                 </div>
                 <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
                     <div
-                        class="h-full rounded-full transition-all duration-500 {course.progress_percent === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}"
+                        class="h-full rounded-full transition-all duration-500 {course.is_completed || course.progress_percent === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}"
                         style="width: {course.progress_percent}%"
                     ></div>
                 </div>
             </div>
-            {#if course.progress_percent === 100}
-                <div class="size-8 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Award class="size-4.5" />
-                </div>
+
+            {#if course.is_completed || course.progress_percent === 100}
+                <button
+                    type="button"
+                    onclick={() => (isCertificateOpen = true)}
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-amber-500 hover:bg-amber-400 text-white shadow-xs transition-colors shrink-0"
+                >
+                    <Award class="size-3.5" />
+                    <span>Sertifikat</span>
+                </button>
+            {:else}
+                <button
+                    type="button"
+                    onclick={completeEntireCourse}
+                    disabled={isCompletingCourse}
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors shrink-0 disabled:opacity-50"
+                >
+                    <CheckCircle2 class="size-3.5" />
+                    <span>{isCompletingCourse ? 'Menyimpan...' : 'Tandai Selesai'}</span>
+                </button>
             {/if}
         </div>
     </div>
+
+    <!-- Celebratory Banner when Completed -->
+    {#if course.is_completed || course.progress_percent === 100}
+        <div class="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div class="flex items-center gap-3.5">
+                <div class="size-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <Award class="size-6" />
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                        <span>Selamat! Kelas Telah Berhasil Diselesaikan</span>
+                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">100% Selesai</span>
+                    </h3>
+                    <p class="text-xs text-muted-foreground mt-0.5">
+                        Anda telah menyelesaikan seluruh modul pelatihan. Sertifikat resmi Anda telah diterbitkan dan siap diunduh/dicetak.
+                    </p>
+                </div>
+            </div>
+            <button
+                type="button"
+                onclick={() => (isCertificateOpen = true)}
+                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/25 active:scale-95 transition-all shrink-0 cursor-pointer"
+            >
+                <Award class="size-4.5" />
+                <span>Buka Sertifikat Kelulusan</span>
+            </button>
+        </div>
+    {/if}
 
     <!-- Main Layout: Content Player (Left) + Curriculum Sidebar (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -839,3 +904,13 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Sertifikat Kelulusan Resmi -->
+<CertificateModal
+    isOpen={isCertificateOpen}
+    course={course}
+    user={user}
+    completedAt={course.completed_at}
+    certificateCode={course.certificate_code}
+    onClose={() => (isCertificateOpen = false)}
+/>
