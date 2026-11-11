@@ -1,5 +1,8 @@
 import { createInertiaApp } from '@inertiajs/svelte';
-import '@fontsource/gidole';
+import '@fontsource/urbanist';
+import '@fontsource/urbanist/500.css';
+import '@fontsource/urbanist/600.css';
+import '@fontsource/urbanist/700.css';
 import AppLayout from '@/layouts/AppLayout.svelte';
 import AuthLayout from '@/layouts/AuthLayout.svelte';
 import SettingsLayout from '@/layouts/settings/Layout.svelte';
