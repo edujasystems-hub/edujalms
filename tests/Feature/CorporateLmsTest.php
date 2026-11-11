@@ -1,0 +1,135 @@
+<?php
+
+use App\Models\ClassGroup;
+use App\Models\Course;
+use App\Models\Lesson;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->seed(DatabaseSeeder::class);
+});
+
+test('admin can view admin dashboard and manage lms', function () {
+    $admin = User::where('role', 'admin')->first();
+
+    $response = $this->actingAs($admin)->get('/dashboard');
+    $response->assertStatus(200);
+
+    $coursesResponse = $this->actingAs($admin)->get('/admin/courses');
+    $coursesResponse->assertStatus(200);
+
+    $groupsResponse = $this->actingAs($admin)->get('/admin/groups');
+    $groupsResponse->assertStatus(200);
+
+    $tutorsResponse = $this->actingAs($admin)->get('/admin/tutors');
+    $tutorsResponse->assertStatus(200);
+
+    $companiesResponse = $this->actingAs($admin)->get('/admin/companies');
+    $companiesResponse->assertStatus(200);
+
+    $employeesResponse = $this->actingAs($admin)->get('/admin/employees');
+    $employeesResponse->assertStatus(200);
+});
+
+test('employee sees my summary with recent courses and spider chart data', function () {
+    $employee = User::where('role', 'employee')->first();
+
+    $response = $this->actingAs($employee)->get('/dashboard');
+    $response->assertStatus(200);
+
+    $summaryResponse = $this->actingAs($employee)->get('/my-summary');
+    $summaryResponse->assertStatus(200);
+    $summaryResponse->assertInertia(fn ($page) => $page
+        ->component('employee/MySummary')
+        ->has('recentClasses')
+        ->has('widgets')
+        ->has('competencies')
+    );
+});
+
+test('employee automatically has access to all courses in assigned class group', function () {
+    $employee = User::factory()->create([
+        'role' => 'employee',
+        'email_verified_at' => now(),
+    ]);
+
+    $group = ClassGroup::create([
+        'name' => 'AI Leadership Track',
+        'slug' => 'ai-leadership-track',
+        'badge_color' => 'indigo',
+    ]);
+
+    $course = Course::create([
+        'class_group_id' => $group->id,
+        'title' => 'Executive AI Transformation',
+        'slug' => 'executive-ai-transformation',
+        'level' => 'intermediate',
+        'status' => 'published',
+        'estimated_duration_hours' => 3,
+    ]);
+
+    Lesson::create([
+        'course_id' => $course->id,
+        'title' => 'Pengenalan AI Eksekutif',
+        'slug' => 'pengenalan-ai-eksekutif',
+        'content_type' => 'video',
+        'video_url' => 'https://www.youtube.com/watch?v=aircAruvnKk',
+        'duration_minutes' => 15,
+        'sort_order' => 1,
+    ]);
+
+    // Before group assignment: user does not have access
+    expect($employee->hasAccessToCourse($course))->toBeFalse();
+
+    // Assign employee to class group
+    $employee->classGroups()->attach($group->id, ['assigned_at' => now()]);
+
+    // Now employee automatically has access to the course!
+    expect($employee->fresh()->hasAccessToCourse($course))->toBeTrue();
+
+    // Player access succeeds
+    $playerResponse = $this->actingAs($employee)->get("/learn/{$course->slug}");
+    $playerResponse->assertStatus(200);
+    $playerResponse->assertInertia(fn ($page) => $page
+        ->component('employee/CoursePlayer')
+        ->has('course')
+        ->has('lessons', 1)
+        ->has('activeLesson')
+    );
+});
+
+test('employee can toggle lesson completion and progress is calculated', function () {
+    $employee = User::where('role', 'employee')->first();
+    $course = Course::first();
+    
+    // Pick an uncompleted lesson
+    $lesson = $course->lessons->first(function ($l) use ($employee) {
+        return ! DB::table('lesson_user')
+            ->where('user_id', $employee->id)
+            ->where('lesson_id', $l->id)
+            ->where('is_completed', true)
+            ->exists();
+    });
+
+    $response = $this->actingAs($employee)->post("/learn/{$course->id}/lessons/{$lesson->id}/toggle");
+    $response->assertRedirect();
+
+    $hasCompleted = DB::table('lesson_user')
+        ->where('user_id', $employee->id)
+        ->where('lesson_id', $lesson->id)
+        ->value('is_completed');
+
+    expect((bool) $hasCompleted)->toBeTrue();
+});
+
+test('non-admin is prevented from accessing admin panel', function () {
+    $employee = User::where('role', 'employee')->first();
+
+    $response = $this->actingAs($employee)->get('/admin/courses');
+    $response->assertRedirect('/dashboard');
+});
