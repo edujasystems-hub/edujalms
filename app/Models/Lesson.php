@@ -25,6 +25,9 @@ class Lesson extends Model
         'pdf_url',
         'attachments',
         'is_preview',
+        'due_date',
+        'pre_test',
+        'post_test',
     ];
 
     protected function casts(): array
@@ -34,6 +37,9 @@ class Lesson extends Model
             'is_preview' => 'boolean',
             'sort_order' => 'integer',
             'duration_minutes' => 'integer',
+            'due_date' => 'date',
+            'pre_test' => 'array',
+            'post_test' => 'array',
         ];
     }
 

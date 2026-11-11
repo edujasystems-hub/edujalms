@@ -33,6 +33,26 @@
     import BookOpen from '@lucide/svelte/icons/book-open';
     import Award from '@lucide/svelte/icons/award';
     import Sparkles from '@lucide/svelte/icons/sparkles';
+    import Calendar from '@lucide/svelte/icons/calendar';
+    import AlertCircle from '@lucide/svelte/icons/alert-circle';
+    import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+    import X from '@lucide/svelte/icons/x';
+    import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+
+    interface QuizQuestion {
+        id: string;
+        question: string;
+        options: string[];
+        correct_answer: number;
+        explanation?: string;
+    }
+
+    interface QuizTest {
+        title: string;
+        instructions?: string;
+        passing_score?: number;
+        questions: QuizQuestion[];
+    }
 
     interface LessonItem {
         id: number;
@@ -44,6 +64,9 @@
         content_type: string;
         is_completed: boolean;
         is_preview?: boolean;
+        has_pre_test?: boolean;
+        has_post_test?: boolean;
+        due_date?: string | null;
     }
 
     interface ActiveLesson extends LessonItem {
@@ -51,6 +74,8 @@
         audio_url?: string;
         content_text?: string;
         pdf_url?: string;
+        pre_test?: QuizTest | null;
+        post_test?: QuizTest | null;
         attachments?: Array<{
             name: string;
             url: string;
@@ -69,20 +94,27 @@
         activeLesson: ActiveLesson | null;
     } = $props();
 
+    function formatDate(dateStr?: string | null) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+        });
+    }
+
     // Helper to format YouTube embed link
     function getYouTubeEmbedUrl(url?: string): string | null {
         if (!url) return null;
         try {
-            // Already embed format
             if (url.includes('youtube.com/embed/')) {
                 return url;
             }
-            // youtu.be/ID
             const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
             if (shortMatch && shortMatch[1]) {
                 return `https://www.youtube-nocookie.com/embed/${shortMatch[1]}?rel=0&modestbranding=1`;
             }
-            // youtube.com/watch?v=ID
             const longMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
             if (longMatch && longMatch[1]) {
                 return `https://www.youtube-nocookie.com/embed/${longMatch[1]}?rel=0&modestbranding=1`;
@@ -96,6 +128,67 @@
     const embedVideoUrl = $derived(getYouTubeEmbedUrl(activeLesson?.video_url));
 
     let isSubmitting = $state(false);
+
+    // Pre-Test Interactivity State
+    let preTestAnswers = $state<Record<number, number>>({});
+    let preTestSubmitted = $state(false);
+    let preTestScore = $state(0);
+
+    // Post-Test Interactivity State
+    let postTestAnswers = $state<Record<number, number>>({});
+    let postTestSubmitted = $state(false);
+    let postTestScore = $state(0);
+
+    // Reset test state when active lesson changes
+    $effect(() => {
+        if (activeLesson) {
+            preTestAnswers = {};
+            preTestSubmitted = false;
+            preTestScore = 0;
+
+            postTestAnswers = {};
+            postTestSubmitted = false;
+            postTestScore = 0;
+        }
+    });
+
+    function submitPreTest() {
+        if (!activeLesson?.pre_test?.questions?.length) return;
+        const questions = activeLesson.pre_test.questions;
+        let correctCount = 0;
+        questions.forEach((q, idx) => {
+            if (preTestAnswers[idx] === q.correct_answer) {
+                correctCount++;
+            }
+        });
+        preTestScore = Math.round((correctCount / questions.length) * 100);
+        preTestSubmitted = true;
+    }
+
+    function resetPreTest() {
+        preTestAnswers = {};
+        preTestSubmitted = false;
+        preTestScore = 0;
+    }
+
+    function submitPostTest() {
+        if (!activeLesson?.post_test?.questions?.length) return;
+        const questions = activeLesson.post_test.questions;
+        let correctCount = 0;
+        questions.forEach((q, idx) => {
+            if (postTestAnswers[idx] === q.correct_answer) {
+                correctCount++;
+            }
+        });
+        postTestScore = Math.round((correctCount / questions.length) * 100);
+        postTestSubmitted = true;
+    }
+
+    function resetPostTest() {
+        postTestAnswers = {};
+        postTestSubmitted = false;
+        postTestScore = 0;
+    }
 
     function toggleLessonCompletion() {
         if (!activeLesson || isSubmitting) return;
@@ -131,11 +224,18 @@
             <h1 class="text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
                 {course.title}
             </h1>
-            {#if course.tutor}
-                <p class="text-xs text-muted-foreground">
-                    Instruktur: <span class="font-medium text-foreground">{course.tutor.name}</span>
-                </p>
-            {/if}
+            <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                {#if course.tutor}
+                    <span>Instruktur: <strong class="font-medium text-foreground">{course.tutor.name}</strong></span>
+                {/if}
+                {#if course.due_date}
+                    {#if course.tutor}<span>•</span>{/if}
+                    <span class="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                        <Calendar class="size-3.5" />
+                        Tenggat Kelas: {formatDate(course.due_date)}
+                    </span>
+                {/if}
+            </div>
         </div>
 
         <!-- Course Progress Pill -->
@@ -179,6 +279,24 @@
                         <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
                             ⏱️ {activeLesson.duration_minutes} Menit
                         </span>
+                        {#if activeLesson.due_date}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/50">
+                                <Calendar class="size-3" />
+                                Tenggat: {formatDate(activeLesson.due_date)}
+                            </span>
+                        {/if}
+                        {#if activeLesson.pre_test?.questions?.length}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                <ClipboardCheck class="size-3" />
+                                Pre-Test Tersedia
+                            </span>
+                        {/if}
+                        {#if activeLesson.post_test?.questions?.length}
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                                <Award class="size-3" />
+                                Post-Test Tersedia
+                            </span>
+                        {/if}
                         {#if activeLesson.is_completed}
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
                                 <CheckCircle2 class="size-3.5" /> Selesai
@@ -196,6 +314,135 @@
                         </p>
                     {/if}
                 </div>
+
+                <!-- Pre-Test Section (Optional) -->
+                {#if activeLesson.pre_test?.questions?.length}
+                    <div class="rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-gradient-to-b from-indigo-50/40 via-card to-card dark:from-indigo-950/20 p-5 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-indigo-100 dark:border-indigo-900/40">
+                            <div class="flex items-center gap-2.5">
+                                <div class="size-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                    PRE
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-foreground">
+                                        {activeLesson.pre_test.title || 'Pre-Test Pelajaran'}
+                                    </h3>
+                                    {#if activeLesson.pre_test.instructions}
+                                        <p class="text-xs text-muted-foreground">
+                                            {activeLesson.pre_test.instructions}
+                                        </p>
+                                    {/if}
+                                </div>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                                Target: {activeLesson.pre_test.passing_score ?? 70}%
+                            </span>
+                        </div>
+
+                        {#if !preTestSubmitted}
+                            <div class="space-y-4 pt-1">
+                                {#each activeLesson.pre_test.questions as q, qIdx (q.id || qIdx)}
+                                    <div class="p-4 rounded-xl border border-border bg-card space-y-3">
+                                        <div class="text-xs font-semibold text-foreground flex items-start gap-2">
+                                            <span class="size-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 text-[11px] font-bold">
+                                                {qIdx + 1}
+                                            </span>
+                                            <span class="leading-relaxed">{q.question}</span>
+                                        </div>
+                                        <div class="space-y-1.5 pl-7">
+                                            {#each q.options as opt, optIdx}
+                                                <label
+                                                    class="flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all {preTestAnswers[qIdx] === optIdx ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 text-foreground font-semibold shadow-xs' : 'border-border/60 hover:bg-muted/50 text-muted-foreground'}"
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="pre_q_{qIdx}"
+                                                        checked={preTestAnswers[qIdx] === optIdx}
+                                                        onchange={() => (preTestAnswers[qIdx] = optIdx)}
+                                                        class="size-3.5 text-indigo-600 focus:ring-indigo-500"
+                                                    />
+                                                    <span>{opt}</span>
+                                                </label>
+                                            {/each}
+                                        </div>
+                                    </div>
+                                {/each}
+
+                                <div class="flex justify-end pt-1">
+                                    <button
+                                        type="button"
+                                        onclick={submitPreTest}
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors"
+                                    >
+                                        <ClipboardCheck class="size-4" />
+                                        <span>Kirim Jawaban Pre-Test</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {:else}
+                            <!-- Result Screen -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 rounded-xl border {preTestScore >= (activeLesson.pre_test.passing_score ?? 70) ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200' : 'border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200'}">
+                                    <div class="flex items-center gap-3">
+                                        {#if preTestScore >= (activeLesson.pre_test.passing_score ?? 70)}
+                                            <CheckCircle2 class="size-6 text-emerald-600 shrink-0" />
+                                            <div>
+                                                <div class="text-sm font-bold">Lulus Pre-Test! Skor: {preTestScore}%</div>
+                                                <div class="text-xs opacity-90">Pemahaman awal Anda sangat baik. Silakan pelajari materi berikut.</div>
+                                            </div>
+                                        {:else}
+                                            <AlertCircle class="size-6 text-amber-600 shrink-0" />
+                                            <div>
+                                                <div class="text-sm font-bold">Hasil Pre-Test: {preTestScore}%</div>
+                                                <div class="text-xs opacity-90">Jangan khawatir, simak materi di bawah untuk memperdalam pemahaman Anda.</div>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onclick={resetPreTest}
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold hover:bg-muted text-foreground transition-colors shrink-0"
+                                    >
+                                        <RotateCcw class="size-3.5" />
+                                        <span>Ulangi Pre-Test</span>
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3 pt-1">
+                                    {#each activeLesson.pre_test.questions as q, qIdx}
+                                        {@const isCorrect = preTestAnswers[qIdx] === q.correct_answer}
+                                        <div class="p-3.5 rounded-xl border {isCorrect ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20' : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20'} space-y-2 text-xs">
+                                            <div class="font-semibold text-foreground flex items-center justify-between">
+                                                <span class="flex items-center gap-2">
+                                                    {#if isCorrect}
+                                                        <CheckCircle2 class="size-4 text-emerald-600 shrink-0" />
+                                                    {:else}
+                                                        <X class="size-4 text-rose-600 shrink-0" />
+                                                    {/if}
+                                                    <span>#{qIdx + 1}: {q.question}</span>
+                                                </span>
+                                                <span class="font-bold {isCorrect ? 'text-emerald-600' : 'text-rose-600'}">
+                                                    {isCorrect ? 'Benar (+)' : 'Salah'}
+                                                </span>
+                                            </div>
+                                            <div class="pl-6 space-y-1 text-muted-foreground">
+                                                <div>Pilihan Anda: <span class="font-medium {isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">{q.options[preTestAnswers[qIdx]] ?? 'Belum dijawab'}</span></div>
+                                                {#if !isCorrect}
+                                                    <div>Kunci Jawaban: <span class="font-semibold text-emerald-700 dark:text-emerald-300">{q.options[q.correct_answer]}</span></div>
+                                                {/if}
+                                                {#if q.explanation}
+                                                    <div class="p-2.5 rounded-lg bg-card border border-border/60 text-[11px] text-foreground/80 mt-1.5">
+                                                        💡 <span class="font-semibold">Penjelasan:</span> {q.explanation}
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
 
                 <!-- 1. Video Player Section (YouTube embed) -->
                 {#if embedVideoUrl}
@@ -322,6 +569,135 @@
                     </div>
                 {/if}
 
+                <!-- Post-Test Section (Optional) -->
+                {#if activeLesson.post_test?.questions?.length}
+                    <div class="rounded-2xl border border-purple-200 dark:border-purple-900/60 bg-gradient-to-b from-purple-50/40 via-card to-card dark:from-purple-950/20 p-5 shadow-xs space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-purple-100 dark:border-purple-900/40">
+                            <div class="flex items-center gap-2.5">
+                                <div class="size-8 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                                    POST
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-foreground">
+                                        {activeLesson.post_test.title || 'Post-Test Evaluasi Akhir'}
+                                    </h3>
+                                    {#if activeLesson.post_test.instructions}
+                                        <p class="text-xs text-muted-foreground">
+                                            {activeLesson.post_test.instructions}
+                                        </p>
+                                    {/if}
+                                </div>
+                            </div>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">
+                                Target: {activeLesson.post_test.passing_score ?? 70}%
+                            </span>
+                        </div>
+
+                        {#if !postTestSubmitted}
+                            <div class="space-y-4 pt-1">
+                                {#each activeLesson.post_test.questions as q, qIdx (q.id || qIdx)}
+                                    <div class="p-4 rounded-xl border border-border bg-card space-y-3">
+                                        <div class="text-xs font-semibold text-foreground flex items-start gap-2">
+                                            <span class="size-5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 text-[11px] font-bold">
+                                                {qIdx + 1}
+                                            </span>
+                                            <span class="leading-relaxed">{q.question}</span>
+                                        </div>
+                                        <div class="space-y-1.5 pl-7">
+                                            {#each q.options as opt, optIdx}
+                                                <label
+                                                    class="flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all {postTestAnswers[qIdx] === optIdx ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/40 text-foreground font-semibold shadow-xs' : 'border-border/60 hover:bg-muted/50 text-muted-foreground'}"
+                                                >
+                                                    <input
+                                                        type="radio"
+                                                        name="post_q_{qIdx}"
+                                                        checked={postTestAnswers[qIdx] === optIdx}
+                                                        onchange={() => (postTestAnswers[qIdx] = optIdx)}
+                                                        class="size-3.5 text-purple-600 focus:ring-purple-500"
+                                                    />
+                                                    <span>{opt}</span>
+                                                </label>
+                                            {/each}
+                                        </div>
+                                    </div>
+                                {/each}
+
+                                <div class="flex justify-end pt-1">
+                                    <button
+                                        type="button"
+                                        onclick={submitPostTest}
+                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition-colors"
+                                    >
+                                        <ClipboardCheck class="size-4" />
+                                        <span>Kirim Jawaban Post-Test</span>
+                                    </button>
+                                </div>
+                            </div>
+                        {:else}
+                            <!-- Result Screen -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 rounded-xl border {postTestScore >= (activeLesson.post_test.passing_score ?? 70) ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200' : 'border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200'}">
+                                    <div class="flex items-center gap-3">
+                                        {#if postTestScore >= (activeLesson.post_test.passing_score ?? 70)}
+                                            <CheckCircle2 class="size-6 text-emerald-600 shrink-0" />
+                                            <div>
+                                                <div class="text-sm font-bold">Lulus Post-Test! Skor: {postTestScore}%</div>
+                                                <div class="text-xs opacity-90">Selamat! Anda telah memahami modul ini dengan sangat baik.</div>
+                                            </div>
+                                        {:else}
+                                            <AlertCircle class="size-6 text-amber-600 shrink-0" />
+                                            <div>
+                                                <div class="text-sm font-bold">Hasil Post-Test: {postTestScore}%</div>
+                                                <div class="text-xs opacity-90">Skor belum mencapai target ({activeLesson.post_test.passing_score ?? 70}%). Anda dapat mengulanginya.</div>
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onclick={resetPostTest}
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold hover:bg-muted text-foreground transition-colors shrink-0"
+                                    >
+                                        <RotateCcw class="size-3.5" />
+                                        <span>Ulangi Post-Test</span>
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3 pt-1">
+                                    {#each activeLesson.post_test.questions as q, qIdx}
+                                        {@const isCorrect = postTestAnswers[qIdx] === q.correct_answer}
+                                        <div class="p-3.5 rounded-xl border {isCorrect ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20' : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20'} space-y-2 text-xs">
+                                            <div class="font-semibold text-foreground flex items-center justify-between">
+                                                <span class="flex items-center gap-2">
+                                                    {#if isCorrect}
+                                                        <CheckCircle2 class="size-4 text-emerald-600 shrink-0" />
+                                                    {:else}
+                                                        <X class="size-4 text-rose-600 shrink-0" />
+                                                    {/if}
+                                                    <span>#{qIdx + 1}: {q.question}</span>
+                                                </span>
+                                                <span class="font-bold {isCorrect ? 'text-emerald-600' : 'text-rose-600'}">
+                                                    {isCorrect ? 'Benar (+)' : 'Salah'}
+                                                </span>
+                                            </div>
+                                            <div class="pl-6 space-y-1 text-muted-foreground">
+                                                <div>Pilihan Anda: <span class="font-medium {isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">{q.options[postTestAnswers[qIdx]] ?? 'Belum dijawab'}</span></div>
+                                                {#if !isCorrect}
+                                                    <div>Kunci Jawaban: <span class="font-semibold text-emerald-700 dark:text-emerald-300">{q.options[q.correct_answer]}</span></div>
+                                                {/if}
+                                                {#if q.explanation}
+                                                    <div class="p-2.5 rounded-lg bg-card border border-border/60 text-[11px] text-foreground/80 mt-1.5">
+                                                        💡 <span class="font-semibold">Penjelasan:</span> {q.explanation}
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    {/each}
+                                </div>
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
+
                 <!-- Bottom Navigation & Completion Action Bar -->
                 <div class="p-4 rounded-2xl border border-border bg-card shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2 w-full sm:w-auto">
@@ -425,8 +801,14 @@
                                 <div class="line-clamp-2 {isActive ? 'text-indigo-950 dark:text-indigo-200' : 'text-foreground/90'}">
                                     {lesson.title}
                                 </div>
-                                <div class="text-[10px] text-muted-foreground mt-1 flex items-center gap-2">
+                                <div class="text-[10px] text-muted-foreground mt-1 flex flex-wrap items-center gap-1.5">
                                     <span>⏱️ {lesson.duration_minutes} mnt</span>
+                                    {#if lesson.has_pre_test}
+                                        <span class="px-1 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Pre</span>
+                                    {/if}
+                                    {#if lesson.has_post_test}
+                                        <span class="px-1 py-0.2 rounded font-semibold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">Post</span>
+                                    {/if}
                                     {#if lesson.is_completed}
                                         <span class="text-emerald-600 font-medium">✓ Selesai</span>
                                     {/if}

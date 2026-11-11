@@ -3,11 +3,11 @@
         breadcrumbs: [
             {
                 title: 'Admin',
-                href: '/dashboard',
+                href: '/admin/dashboard',
             },
             {
-                title: 'Dashboard Korporat',
-                href: '/dashboard',
+                title: 'Dashboard',
+                href: '/admin/dashboard',
             },
         ],
     };
@@ -25,8 +25,6 @@
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
     import ArrowRight from '@lucide/svelte/icons/arrow-right';
     import Plus from '@lucide/svelte/icons/plus';
-    import ShieldCheck from '@lucide/svelte/icons/shield-check';
-    import UserPlus from '@lucide/svelte/icons/user-plus';
 
     interface Stats {
         total_companies: number;
@@ -52,41 +50,32 @@
     } = $props();
 </script>
 
-<AppHead title="Admin Dashboard - Eduja Corporate LMS" />
+<AppHead title="Dashboard - Corporate LMS" />
 
 <div class="flex-1 space-y-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
     <!-- Header Admin -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
-                    <ShieldCheck class="size-3.5" />
-                    <span>Administrator Console</span>
-                </span>
-            </div>
-            <h1 class="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight mt-1">
-                Dashboard Corporate LMS
+            <h1 class="text-xl font-bold text-foreground tracking-tight">
+                Dashboard
             </h1>
-            <p class="text-sm text-muted-foreground mt-0.5">
-                Pantau adopsi pembelajaran karyawan, pengelolaan modul kelas, dan integrasi antar divisi korporat.
-            </p>
         </div>
 
         <!-- Quick Action CTAs -->
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex items-center gap-2">
             <Link
                 href="/admin/courses"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
             >
-                <Plus class="size-4" />
-                <span>Tambah Kelas Baru</span>
+                <Plus class="size-3.5" />
+                <span>Tambah Kelas</span>
             </Link>
             <Link
                 href="/admin/groups"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors"
             >
-                <Layers class="size-4 text-indigo-600" />
-                <span>Kelola Group Kelas</span>
+                <Layers class="size-3.5 text-indigo-600" />
+                <span>Kategori</span>
             </Link>
         </div>
     </div>

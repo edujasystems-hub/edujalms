@@ -23,6 +23,11 @@ class DashboardController extends Controller
             return app(SummaryController::class)->index($request);
         }
 
+        return $this->adminDashboard($request);
+    }
+
+    public function adminDashboard(Request $request): Response
+    {
         // Admin Dashboard
         $totalCompanies = Company::count();
         $totalEmployees = User::where('role', 'employee')->count();

@@ -2,7 +2,7 @@
     export const layout = {
         breadcrumbs: [
             {
-                title: 'Portal Karyawan',
+                title: 'Portal',
                 href: '/my-summary',
             },
             {
@@ -20,8 +20,8 @@
     import PlayCircle from '@lucide/svelte/icons/play-circle';
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
     import Layers from '@lucide/svelte/icons/layers';
-    import Sparkles from '@lucide/svelte/icons/sparkles';
     import Clock from '@lucide/svelte/icons/clock';
+    import Calendar from '@lucide/svelte/icons/calendar';
 
     let {
         courses = [],
@@ -42,61 +42,55 @@
         switch (lvl) {
             case 'beginner': return 'Pemula';
             case 'intermediate': return 'Menengah';
-            case 'advanced': return 'Tingkat Mahir';
+            case 'advanced': return 'Mahir';
             default: return 'Semua Level';
         }
     }
 </script>
 
-<AppHead title="Kelas Saya & Track Akses Karyawan" />
+<AppHead title="Kelas Saya - Corporate LMS" />
 
-<div class="flex-1 space-y-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex-1 space-y-5 p-4 md:p-6 max-w-7xl mx-auto w-full">
+    <!-- Minimalist Header -->
+    <div class="flex items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-                <BookOpen class="size-6 text-indigo-600" />
-                <span>Kelas Saya & Program Akses</span>
+            <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
+                <BookOpen class="size-5 text-indigo-600" />
+                <span>Kelas Saya</span>
             </h1>
-            <p class="text-sm text-muted-foreground mt-1">
-                Daftar seluruh kelas yang diberikan kepada Anda melalui penugasan langsung maupun grup track korporat.
-            </p>
         </div>
     </div>
 
-    <!-- Assigned Groups Cards / Filter Bar -->
+    <!-- Assigned Groups Filter Bar -->
     {#if assignedGroups.length > 0}
-        <div class="space-y-2">
-            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Group & Program Track Anda:</span>
-            <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2">
+            <button
+                type="button"
+                onclick={() => (selectedGroupId = null)}
+                class="px-3 py-1 rounded-full text-xs font-semibold transition-all {selectedGroupId === null ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
+            >
+                Semua ({courses.length})
+            </button>
+            {#each assignedGroups as group}
                 <button
                     type="button"
-                    onclick={() => (selectedGroupId = null)}
-                    class="px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all {selectedGroupId === null ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
+                    onclick={() => (selectedGroupId = group.id)}
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all {selectedGroupId === group.id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
                 >
-                    Semua ({courses.length})
+                    <Layers class="size-3.5" />
+                    <span>{group.name}</span>
+                    <span class="size-4 rounded-full text-[10px] bg-black/10 dark:bg-white/10 flex items-center justify-center font-mono">
+                        {group.courses_count}
+                    </span>
                 </button>
-                {#each assignedGroups as group}
-                    <button
-                        type="button"
-                        onclick={() => (selectedGroupId = group.id)}
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all {selectedGroupId === group.id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
-                    >
-                        <Layers class="size-3.5" />
-                        <span>{group.name}</span>
-                        <span class="size-4.5 rounded-full text-[10px] bg-black/10 dark:bg-white/10 flex items-center justify-center font-mono font-bold">
-                            {group.courses_count}
-                        </span>
-                    </button>
-                {/each}
-            </div>
+            {/each}
         </div>
     {/if}
 
-    <!-- Courses Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- 4-Kolom Courses Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {#each filteredCourses as course (course.id)}
-            <div class="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:border-indigo-400 hover:shadow-lg transition-all">
+            <div class="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:border-indigo-400/60 hover:shadow-md transition-all">
                 <!-- Thumbnail -->
                 <div class="relative aspect-video w-full overflow-hidden bg-muted">
                     {#if course.thumbnail_url}
@@ -106,14 +100,14 @@
                             class="size-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                     {:else}
-                        <div class="size-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-950 dark:to-slate-900 text-indigo-600">
-                            <BookOpen class="size-12" />
+                        <div class="size-full flex items-center justify-center bg-indigo-50 dark:bg-indigo-950 text-indigo-600">
+                            <BookOpen class="size-8" />
                         </div>
                     {/if}
 
                     <div class="absolute top-2 left-2 flex gap-1.5">
                         {#if course.class_group}
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-900/80 text-white backdrop-blur-xs">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 text-white backdrop-blur-xs">
                                 {course.class_group.name}
                             </span>
                         {/if}
@@ -121,55 +115,43 @@
 
                     <div class="absolute bottom-2 right-2">
                         <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-black/75 text-white backdrop-blur-xs flex items-center gap-1">
-                            <Clock class="size-3" /> {course.estimated_duration_hours} Jam
+                            <Clock class="size-3" /> {course.estimated_duration_hours}j
                         </span>
                     </div>
                 </div>
 
                 <!-- Body -->
-                <div class="p-5 flex-1 flex flex-col justify-between">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between text-xs text-muted-foreground">
+                <div class="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
                             <span>{formatLevel(course.level)}</span>
                             <span>{course.lessons_count} Pelajaran</span>
                         </div>
 
-                        <h3 class="text-base font-bold text-foreground leading-snug group-hover:text-indigo-600 transition-colors">
+                        <h3 class="text-xs font-bold text-foreground leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
                             <Link href="/learn/{course.slug}">
                                 {course.title}
                             </Link>
                         </h3>
 
-                        {#if course.short_description}
-                            <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                                {course.short_description}
-                            </p>
-                        {/if}
-
-                        {#if course.tutor}
-                            <div class="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
-                                {#if course.tutor.avatar_url}
-                                    <img
-                                        src={course.tutor.avatar_url}
-                                        alt={course.tutor.name}
-                                        class="size-5 rounded-full object-cover border border-border"
-                                    />
-                                {/if}
-                                <span class="truncate">{course.tutor.name}</span>
+                        {#if course.due_date}
+                            <div class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                                <Calendar class="size-3" />
+                                <span>Batas: {course.due_date}</span>
                             </div>
                         {/if}
                     </div>
 
-                    <!-- Progress and CTA -->
-                    <div class="mt-4 pt-4 border-t border-border/60">
-                        <div class="flex items-center justify-between text-xs mb-1.5">
-                            <span class="font-medium text-muted-foreground">Progress</span>
-                            <span class="font-mono font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
+                    <!-- Progress Bar & CTA -->
+                    <div class="space-y-2 pt-2 border-t border-border/60">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-muted-foreground font-medium">Progress</span>
+                            <span class="font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
                                 {course.progress_percent}%
                             </span>
                         </div>
 
-                        <div class="w-full h-2 rounded-full bg-muted overflow-hidden mb-3">
+                        <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                             <div
                                 class="h-full rounded-full transition-all duration-500 {course.progress_percent === 100 ? 'bg-emerald-500' : 'bg-indigo-600'}"
                                 style="width: {course.progress_percent}%"
@@ -178,14 +160,17 @@
 
                         <Link
                             href="/learn/{course.slug}"
-                            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all shadow-xs {course.progress_percent === 100 ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}"
+                            class="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all {course.progress_percent === 100 ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-indigo-600 hover:bg-indigo-500 text-white'}"
                         >
                             {#if course.progress_percent === 100}
-                                <CheckCircle2 class="size-4 text-emerald-500" />
-                                <span>Tinjau Ulang Kelas</span>
+                                <CheckCircle2 class="size-3.5 text-emerald-500" />
+                                <span>Ulas Materi</span>
+                            {:else if course.progress_percent > 0}
+                                <PlayCircle class="size-3.5" />
+                                <span>Lanjutkan</span>
                             {:else}
-                                <PlayCircle class="size-4" />
-                                <span>{course.progress_percent > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}</span>
+                                <PlayCircle class="size-3.5" />
+                                <span>Mulai Belajar</span>
                             {/if}
                         </Link>
                     </div>
@@ -193,4 +178,11 @@
             </div>
         {/each}
     </div>
+
+    {#if filteredCourses.length === 0}
+        <div class="p-8 rounded-2xl border border-dashed border-border text-center">
+            <BookOpen class="size-10 mx-auto text-muted-foreground/40 mb-2" />
+            <h3 class="text-xs font-semibold text-foreground">Tidak ada kelas pada kategori ini</h3>
+        </div>
+    {/if}
 </div>

@@ -25,6 +25,7 @@ class Course extends Model
         'estimated_duration_hours',
         'competency_impact',
         'status',
+        'due_date',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Course extends Model
         return [
             'competency_impact' => 'array',
             'estimated_duration_hours' => 'float',
+            'due_date' => 'date',
         ];
     }
 

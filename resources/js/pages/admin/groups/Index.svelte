@@ -3,10 +3,10 @@
         breadcrumbs: [
             {
                 title: 'Admin',
-                href: '/dashboard',
+                href: '/admin/dashboard',
             },
             {
-                title: 'Group & Kategori Kelas',
+                title: 'Kategori Kelas',
                 href: '/admin/groups',
             },
         ],
@@ -16,13 +16,13 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import DataTable, { type Column } from '@/components/DataTable.svelte';
     import Layers from '@lucide/svelte/icons/layers';
     import Plus from '@lucide/svelte/icons/plus';
     import Users from '@lucide/svelte/icons/users';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import Trash2 from '@lucide/svelte/icons/trash-2';
     import Edit3 from '@lucide/svelte/icons/edit-3';
-    import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
     import UserPlus from '@lucide/svelte/icons/user-plus';
     import X from '@lucide/svelte/icons/x';
 
@@ -33,6 +33,13 @@
         classGroups: any[];
         allEmployees: any[];
     } = $props();
+
+    const columns: Column[] = [
+        { key: 'name', label: 'Nama Kategori & Deskripsi', sortable: true },
+        { key: 'courses_count', label: 'Total Kelas', sortable: true, align: 'center', class: 'w-28' },
+        { key: 'employees_count', label: 'Karyawan', sortable: true, class: 'min-w-[200px]' },
+        { key: 'is_active', label: 'Status', sortable: true, align: 'center', class: 'w-24' },
+    ];
 
     // Create / Edit Group Modal
     let isGroupModalOpen = $state(false);
@@ -90,12 +97,12 @@
     }
 
     function deleteGroup(grp: any) {
-        if (confirm(`Hapus grup kelas '${grp.name}'? Kelas di dalamnya tidak akan terhapus, hanya dilepas dari grup.`)) {
+        if (confirm(`Hapus kategori '${grp.name}'? Kelas di dalamnya tidak akan terhapus, hanya dilepas dari kategori.`)) {
             router.delete(`/admin/groups/${grp.id}`);
         }
     }
 
-    // Assign Employees to Group Modal
+    // Assign Employees Modal
     let isAssignModalOpen = $state(false);
     let targetGroup = $state<any | null>(null);
     let selectedUserIds = $state<number[]>([]);
@@ -129,163 +136,119 @@
     }
 
     function removeEmployeeFromGroup(grp: any, emp: any) {
-        if (confirm(`Lepas karyawan '${emp.name}' dari grup '${grp.name}'? Akses ke seluruh kelas di grup ini akan dicabut.`)) {
+        if (confirm(`Lepas akses karyawan '${emp.name}' dari '${grp.name}'?`)) {
             router.delete(`/admin/groups/${grp.id}/remove-user/${emp.id}`);
         }
     }
 </script>
 
-<AppHead title="Group & Kategori Kelas - Corporate LMS" />
+<AppHead title="Kategori Kelas - Corporate LMS" />
 
-<div class="flex-1 space-y-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
+<div class="flex-1 space-y-5 p-4 md:p-6 max-w-7xl mx-auto w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-                <Layers class="size-6 text-indigo-600" />
-                <span>Pengelolaan Group & Kategori Kelas</span>
+            <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
+                <Layers class="size-5 text-indigo-600" />
+                <span>Kategori Kelas</span>
             </h1>
-            <p class="text-sm text-muted-foreground mt-0.5">
-                Kelompokkan kurikulum ke dalam Program Track korporat untuk mempermudah pemberian hak akses masal ke karyawan.
-            </p>
         </div>
         <button
             type="button"
             onclick={openCreateGroup}
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
         >
             <Plus class="size-4" />
-            <span>Buat Group Baru</span>
+            <span>Tambah Kategori</span>
         </button>
     </div>
 
-    <!-- Core Feature Highlight Card -->
-    <div class="p-5 rounded-2xl bg-gradient-to-r from-indigo-900/10 via-indigo-600/10 to-transparent border border-indigo-500/20 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1">
-            <h3 class="text-sm font-bold text-foreground flex items-center gap-1.5">
-                <CheckCircle2 class="size-4 text-indigo-600" />
-                <span>Otomatisasi Akses Kelas Berbasis Group (Track)</span>
-            </h3>
-            <p class="text-xs text-muted-foreground leading-relaxed max-w-3xl">
-                Setiap kelas yang dimasukkan ke dalam group akan otomatis mewarisi hak akses ke seluruh karyawan yang di-assign ke group tersebut. Anda tidak perlu repot memasukkan karyawan satu per satu ke setiap kelas!
-            </p>
-        </div>
-    </div>
-
-    <!-- Groups Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {#each classGroups as group (group.id)}
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-xs hover:border-indigo-400/50 transition-all space-y-4">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1 min-w-0">
-                        <div class="flex items-center gap-2">
-                            <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                                {group.badge_color}
-                            </span>
-                            <span class="text-xs text-muted-foreground font-mono">
-                                /{group.slug}
-                            </span>
-                        </div>
-                        <h2 class="text-base font-bold text-foreground">
-                            {group.name}
-                        </h2>
-                        {#if group.description}
-                            <p class="text-xs text-muted-foreground leading-relaxed">
-                                {group.description}
-                            </p>
-                        {/if}
+    <!-- Reusable DataTable -->
+    <DataTable
+        data={classGroups}
+        columns={columns}
+        searchKeys={['name', 'description']}
+        placeholder="Cari kategori kelas..."
+        initialPageSize={10}
+        pageSizeOptions={[5, 10, 25, 50]}
+    >
+        {#snippet cell({ row, column })}
+            {#if column.key === 'name'}
+                <div class="space-y-0.5">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                            {row.name}
+                        </span>
                     </div>
-
-                    <div class="flex items-center gap-1 shrink-0">
-                        <button
-                            type="button"
-                            onclick={() => openEditGroup(group)}
-                            class="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Edit Group"
-                        >
-                            <Edit3 class="size-4" />
-                        </button>
-                        <button
-                            type="button"
-                            onclick={() => deleteGroup(group)}
-                            class="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50"
-                            title="Hapus Group"
-                        >
-                            <Trash2 class="size-4" />
-                        </button>
-                    </div>
+                    {#if row.description}
+                        <p class="text-[11px] text-muted-foreground line-clamp-1 max-w-md">
+                            {row.description}
+                        </p>
+                    {/if}
                 </div>
-
-                <!-- Stats: Courses & Employees in Group -->
-                <div class="grid grid-cols-2 gap-3 pt-2">
-                    <div class="p-3 rounded-xl bg-muted/30 border border-border/60">
-                        <div class="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                            <span>Total Kelas</span>
-                            <BookOpen class="size-3.5 text-indigo-600" />
-                        </div>
-                        <div class="text-xl font-extrabold text-foreground">{group.courses_count}</div>
-                    </div>
-
-                    <div class="p-3 rounded-xl bg-muted/30 border border-border/60">
-                        <div class="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                            <span>Karyawan Terdaftar</span>
-                            <Users class="size-3.5 text-emerald-600" />
-                        </div>
-                        <div class="text-xl font-extrabold text-foreground">{group.employees_count}</div>
-                    </div>
-                </div>
-
-                <!-- Assigned Courses Tags -->
-                <div>
-                    <span class="text-[11px] font-semibold text-muted-foreground block mb-1.5">Kelas Tergabung:</span>
-                    <div class="flex flex-wrap gap-1.5">
-                        {#each group.courses as c}
-                            <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-foreground border border-border/60 truncate max-w-[220px]">
-                                📚 {c.title}
-                            </span>
-                        {/each}
-                        {#if group.courses.length === 0}
-                            <span class="text-xs text-muted-foreground italic">Belum ada kelas di group ini.</span>
-                        {/if}
-                    </div>
-                </div>
-
-                <!-- Assigned Employees & Assign Button -->
-                <div class="pt-3 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-1.5">
-                        {#each group.employees.slice(0, 4) as emp}
-                            {#if emp.avatar}
-                                <img
-                                    src={emp.avatar}
-                                    alt={emp.name}
-                                    class="size-6 rounded-full object-cover border-2 border-background -ml-1 first:ml-0"
-                                    title={emp.name}
-                                />
-                            {:else}
-                                <div class="size-6 rounded-full bg-indigo-600 text-white text-[10px] flex items-center justify-center font-bold -ml-1 first:ml-0">
+            {:else if column.key === 'courses_count'}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium text-[11px]">
+                    <BookOpen class="size-3 text-indigo-500" />
+                    <span>{row.courses_count ?? 0}</span>
+                </span>
+            {:else if column.key === 'employees_count'}
+                <div class="flex items-center gap-2">
+                    <div class="flex -space-x-1.5 overflow-hidden">
+                        {#each (row.employees || []).slice(0, 3) as emp (emp.id)}
+                            <button
+                                type="button"
+                                title="{emp.name} (klik untuk hapus)"
+                                onclick={() => removeEmployeeFromGroup(row, emp)}
+                                class="inline-block size-6 rounded-full ring-2 ring-card bg-muted text-[10px] font-bold flex items-center justify-center hover:opacity-75 transition-opacity"
+                            >
+                                {#if emp.avatar}
+                                    <img src={emp.avatar} alt={emp.name} class="size-full rounded-full object-cover" />
+                                {:else}
                                     {emp.name.charAt(0)}
-                                </div>
-                            {/if}
+                                {/if}
+                            </button>
                         {/each}
-                        {#if group.employees.length > 4}
-                            <span class="text-[11px] font-semibold text-muted-foreground ml-1">
-                                +{group.employees.length - 4} lainnya
-                            </span>
-                        {/if}
                     </div>
-
-                    <button
-                        type="button"
-                        onclick={() => openAssignModal(group)}
-                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
-                    >
-                        <UserPlus class="size-3.5" />
-                        <span>Assign Karyawan</span>
-                    </button>
+                    <span class="text-[11px] text-muted-foreground">
+                        {row.employees_count ?? 0} orang
+                    </span>
                 </div>
+            {:else if column.key === 'is_active'}
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold {row.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}">
+                    {row.is_active ? 'Aktif' : 'Nonaktif'}
+                </span>
+            {/if}
+        {/snippet}
+
+        {#snippet actions({ row })}
+            <div class="flex items-center justify-end gap-1.5">
+                <button
+                    type="button"
+                    onclick={() => openAssignModal(row)}
+                    title="Assign Karyawan"
+                    class="p-1.5 rounded-lg border border-border hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 transition-colors"
+                >
+                    <UserPlus class="size-3.5" />
+                </button>
+                <button
+                    type="button"
+                    onclick={() => openEditGroup(row)}
+                    title="Edit"
+                    class="p-1.5 rounded-lg border border-border hover:bg-muted text-foreground transition-colors"
+                >
+                    <Edit3 class="size-3.5" />
+                </button>
+                <button
+                    type="button"
+                    onclick={() => deleteGroup(row)}
+                    title="Hapus"
+                    class="p-1.5 rounded-lg border border-border hover:bg-rose-50 dark:hover:bg-rose-950/50 text-rose-600 transition-colors"
+                >
+                    <Trash2 class="size-3.5" />
+                </button>
             </div>
-        {/each}
-    </div>
+        {/snippet}
+    </DataTable>
 </div>
 
 <!-- Modal: Buat / Edit Group -->
@@ -294,7 +257,7 @@
         <div class="bg-card border border-border rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-border/80">
                 <h3 class="text-base font-bold text-foreground">
-                    {editingGroup ? 'Edit Group Kelas' : 'Buat Group Kelas Baru'}
+                    {editingGroup ? 'Edit Kategori Kelas' : 'Tambah Kategori Kelas'}
                 </h3>
                 <button
                     type="button"
@@ -307,21 +270,21 @@
 
             <form onsubmit={submitGroup} class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-foreground mb-1">Nama Group / Track *</label>
+                    <label class="block font-semibold text-foreground mb-1">Nama Kategori *</label>
                     <input
                         type="text"
                         required
-                        placeholder="Contoh: Digital Transformation & AI Track"
+                        placeholder="Contoh: Digital Transformation Track"
                         bind:value={groupForm.name}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30 focus:border-indigo-500"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:border-indigo-500 focus:outline-hidden"
                     />
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-foreground mb-1">Tema Warna Badge</label>
+                    <label class="block font-semibold text-foreground mb-1">Tema Warna</label>
                     <select
                         bind:value={groupForm.badge_color}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30 text-foreground"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                     >
                         <option value="indigo">Indigo / Blue</option>
                         <option value="emerald">Emerald / Green</option>
@@ -332,12 +295,12 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-foreground mb-1">Deskripsi Group</label>
+                    <label class="block font-semibold text-foreground mb-1">Deskripsi Singkat</label>
                     <textarea
                         rows="3"
-                        placeholder="Tujuan program, kurikulum atau target kompetensi..."
+                        placeholder="Tujuan program atau kurikulum..."
                         bind:value={groupForm.description}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                     ></textarea>
                 </div>
 
@@ -354,7 +317,7 @@
                         disabled={isSubmitting}
                         class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs"
                     >
-                        {isSubmitting ? 'Menyimpan...' : 'Simpan Group'}
+                        {isSubmitting ? 'Menyimpan...' : 'Simpan'}
                     </button>
                 </div>
             </form>
@@ -369,10 +332,10 @@
             <div class="flex items-center justify-between pb-3 border-b border-border/80">
                 <div>
                     <h3 class="text-base font-bold text-foreground">
-                        Assign Karyawan ke Group
+                        Assign Karyawan ke Kategori
                     </h3>
                     <p class="text-xs text-indigo-600 font-semibold mt-0.5">
-                        Track: {targetGroup.name}
+                        {targetGroup.name}
                     </p>
                 </div>
                 <button
@@ -384,13 +347,13 @@
                 </button>
             </div>
 
-            <p class="text-xs text-muted-foreground leading-relaxed">
-                Pilih karyawan di bawah. Karyawan terpilih akan otomatis memiliki hak akses belajar ke <strong>seluruh {targetGroup.courses_count} kelas</strong> di dalam group ini.
+            <p class="text-xs text-muted-foreground">
+                Karyawan yang dipilih otomatis mendapat akses ke <strong>seluruh {targetGroup.courses_count} kelas</strong> dalam kategori ini.
             </p>
 
             <div class="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
                 {#each allEmployees as emp (emp.id)}
-                    {@const isAlreadyAssigned = targetGroup.employees.some((u: any) => u.id === emp.id)}
+                    {@const isAlreadyAssigned = (targetGroup.employees || []).some((u: any) => u.id === emp.id)}
                     <label class="flex items-center gap-3 p-2.5 rounded-xl border border-border/70 hover:bg-muted/40 cursor-pointer {isAlreadyAssigned ? 'opacity-50 cursor-not-allowed bg-muted/20' : ''}">
                         <input
                             type="checkbox"
@@ -404,7 +367,7 @@
                             <div class="text-[10px] text-muted-foreground truncate">{emp.email} • {emp.company?.name || 'Perusahaan'}</div>
                         </div>
                         {#if isAlreadyAssigned}
-                            <span class="text-[10px] font-semibold text-emerald-600">Sudah Terdaftar</span>
+                            <span class="text-[10px] font-semibold text-emerald-600">Terdaftar</span>
                         {/if}
                     </label>
                 {/each}
@@ -428,7 +391,7 @@
                         onclick={submitAssignEmployees}
                         class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs disabled:opacity-50"
                     >
-                        {isAssigning ? 'Memproses...' : 'Assign Akses Masal'}
+                        {isAssigning ? 'Memproses...' : 'Simpan Akses'}
                     </button>
                 </div>
             </div>

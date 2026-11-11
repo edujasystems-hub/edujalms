@@ -34,32 +34,32 @@
 
     const adminNavItems: NavItem[] = [
         {
-            title: 'Dashboard Admin',
-            href: '/dashboard',
+            title: 'Dashboard',
+            href: '/admin/dashboard',
             icon: LayoutGrid,
         },
         {
-            title: 'Pengelolaan Kelas',
+            title: 'Kelas',
             href: '/admin/courses',
             icon: GraduationCap,
         },
         {
-            title: 'Group & Kategori Kelas',
+            title: 'Kategori',
             href: '/admin/groups',
             icon: Layers,
         },
         {
-            title: 'Tutor & Instruktur',
+            title: 'Tutor',
             href: '/admin/tutors',
             icon: Award,
         },
         {
-            title: 'Perusahaan Klien',
+            title: 'Perusahaan',
             href: '/admin/companies',
             icon: Building2,
         },
         {
-            title: 'Karyawan & Hak Akses',
+            title: 'Karyawan',
             href: '/admin/employees',
             icon: Users,
         },
@@ -67,12 +67,12 @@
 
     const employeeNavItems: NavItem[] = [
         {
-            title: 'My Summary',
+            title: 'Summary',
             href: '/my-summary',
             icon: LayoutGrid,
         },
         {
-            title: 'Katalog & Kelas Saya',
+            title: 'Kelas Saya',
             href: '/my-courses',
             icon: BookOpen,
         },
@@ -87,7 +87,7 @@
                     {#snippet children(props)}
                         <Link
                             {...props}
-                            href="/dashboard"
+                            href={isAdmin ? '/admin/dashboard' : '/my-summary'}
                             class={props.class}
                         >
                             <AppLogo />
@@ -100,28 +100,28 @@
 
     <SidebarContent class="py-2">
         {#if isAdmin}
-            <NavMain items={adminNavItems} label="Pengelolaan LMS" />
+            <NavMain items={adminNavItems} label="Admin Panel" />
 
             <div class="mt-4 pt-2 border-t border-sidebar-border/60">
                 <NavMain items={employeeNavItems} label="Portal Karyawan" />
             </div>
         {:else}
-            <NavMain items={employeeNavItems} label="Portal Pembelajaran" />
+            <NavMain items={employeeNavItems} label="Menu Utama" />
         {/if}
     </SidebarContent>
 
     <SidebarFooter>
-        <div class="px-3 py-2 text-xs text-muted-foreground border-b border-sidebar-border/50 mb-1">
+        <div class="px-3 py-2 text-xs border-b border-sidebar-border/50 mb-1">
             <div class="flex items-center justify-between">
-                <span class="font-medium text-sidebar-foreground">Peran Aktif:</span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase {isAdmin ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 ring-1 ring-indigo-500/30' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 ring-1 ring-emerald-500/30'}">
-                    {isAdmin ? 'ADMINISTRATOR' : (user?.role?.toUpperCase() ?? 'KARYAWAN')}
+                <span class="text-muted-foreground font-medium">Peran:</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {isAdmin ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'}">
+                    {isAdmin ? 'Admin' : 'Employee'}
                 </span>
             </div>
             {#if user?.company}
-                <div class="truncate text-[11px] mt-1.5 text-sidebar-foreground/80 flex items-center gap-1.5">
+                <div class="truncate text-[11px] mt-1 text-muted-foreground flex items-center gap-1.5">
                     <span>🏢</span>
-                    <span class="truncate font-medium">{user.company.name}</span>
+                    <span class="truncate">{user.company.name}</span>
                 </div>
             {/if}
         </div>

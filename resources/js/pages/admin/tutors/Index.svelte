@@ -3,7 +3,7 @@
         breadcrumbs: [
             {
                 title: 'Admin',
-                href: '/dashboard',
+                href: '/admin/dashboard',
             },
             {
                 title: 'Tutor',
@@ -16,9 +16,9 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import DataTable, { type Column } from '@/components/DataTable.svelte';
     import Award from '@lucide/svelte/icons/award';
     import Plus from '@lucide/svelte/icons/plus';
-    import Search from '@lucide/svelte/icons/search';
     import Mail from '@lucide/svelte/icons/mail';
     import Phone from '@lucide/svelte/icons/phone';
     import BookOpen from '@lucide/svelte/icons/book-open';
@@ -28,17 +28,17 @@
 
     let {
         tutors = [],
-        filters = { search: '' },
     }: {
         tutors: any[];
-        filters: { search: string };
     } = $props();
 
-    let search = $state(filters.search);
-
-    function applySearch() {
-        router.get('/admin/tutors', { search: search || undefined }, { preserveState: true, replace: true });
-    }
+    const columns: Column[] = [
+        { key: 'name', label: 'Tutor & Gelar', sortable: true },
+        { key: 'email', label: 'Kontak', sortable: true },
+        { key: 'specialization', label: 'Spesialisasi', sortable: true },
+        { key: 'courses_count', label: 'Kelas', sortable: true, align: 'center', class: 'w-24' },
+        { key: 'is_active', label: 'Status', sortable: true, align: 'center', class: 'w-24' },
+    ];
 
     // Modal state
     let isTutorModalOpen = $state(false);
@@ -111,131 +111,103 @@
     }
 </script>
 
-<AppHead title="Pengelolaan Tutor & Instruktur - Corporate LMS" />
+<AppHead title="Tutor - Corporate LMS" />
 
-<div class="flex-1 space-y-6 p-4 md:p-6 max-w-7xl mx-auto w-full">
+<div class="flex-1 space-y-5 p-4 md:p-6 max-w-7xl mx-auto w-full">
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
-                <Award class="size-6 text-indigo-600" />
-                <span>Pengelolaan Tutor & Instruktur</span>
+            <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
+                <Award class="size-5 text-indigo-600" />
+                <span>Tutor & Instruktur</span>
             </h1>
-            <p class="text-sm text-muted-foreground mt-0.5">
-                Kelola narasumber, praktisi ahli industri, dan instruktur kelas korporat.
-            </p>
         </div>
         <button
             type="button"
             onclick={openCreateTutor}
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
         >
             <Plus class="size-4" />
-            <span>Daftarkan Tutor Baru</span>
+            <span>Tambah Tutor</span>
         </button>
     </div>
 
-    <!-- Search Bar -->
-    <div class="p-3 rounded-2xl border border-border bg-card shadow-xs flex items-center gap-3">
-        <Search class="size-4 text-muted-foreground ml-2" />
-        <input
-            type="text"
-            placeholder="Cari nama tutor, email, atau bidang keahlian..."
-            bind:value={search}
-            onkeydown={(e) => e.key === 'Enter' && applySearch()}
-            class="flex-1 text-xs bg-transparent border-0 focus:outline-hidden"
-        />
-        <button
-            type="button"
-            onclick={applySearch}
-            class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground"
-        >
-            Cari
-        </button>
-    </div>
-
-    <!-- Tutors Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {#each tutors as tutor (tutor.id)}
-            <div class="rounded-2xl border border-border bg-card p-5 shadow-xs hover:border-indigo-400/50 transition-all flex flex-col justify-between space-y-4">
-                <div class="space-y-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            {#if tutor.avatar_url}
-                                <img
-                                    src={tutor.avatar_url}
-                                    alt={tutor.name}
-                                    class="size-12 rounded-xl object-cover border border-border shrink-0"
-                                />
-                            {:else}
-                                <div class="size-12 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center font-bold text-base shrink-0">
-                                    {tutor.name.charAt(0)}
-                                </div>
-                            {/if}
-                            <div class="min-w-0">
-                                <h3 class="font-bold text-sm text-foreground truncate">{tutor.name}</h3>
-                                <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium truncate">{tutor.title || 'Instruktur Korporat'}</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button
-                                type="button"
-                                onclick={() => openEditTutor(tutor)}
-                                class="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-                                title="Edit Tutor"
-                            >
-                                <Edit3 class="size-3.5" />
-                            </button>
-                            <button
-                                type="button"
-                                onclick={() => deleteTutor(tutor)}
-                                class="p-1.5 rounded-lg text-muted-foreground hover:text-rose-600 hover:bg-rose-50"
-                                title="Hapus Tutor"
-                            >
-                                <Trash2 class="size-3.5" />
-                            </button>
-                        </div>
+    <!-- Reusable DataTable -->
+    <DataTable
+        data={tutors}
+        columns={columns}
+        searchKeys={['name', 'email', 'title', 'specialization']}
+        placeholder="Cari nama, email, spesialisasi tutor..."
+        initialPageSize={10}
+        pageSizeOptions={[5, 10, 25, 50]}
+    >
+        {#snippet cell({ row, column })}
+            {#if column.key === 'name'}
+                <div class="flex items-center gap-3">
+                    <div class="size-8 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0 border border-border">
+                        {#if row.avatar_url}
+                            <img src={row.avatar_url} alt={row.name} class="size-full object-cover" />
+                        {:else}
+                            <span class="font-bold text-xs text-indigo-600">{row.name.charAt(0)}</span>
+                        {/if}
                     </div>
-
-                    {#if tutor.specialization}
-                        <div class="text-[11px] text-muted-foreground bg-muted/30 p-2 rounded-lg border border-border/50">
-                            <strong>Spesialisasi:</strong> {tutor.specialization}
-                        </div>
-                    {/if}
-
-                    {#if tutor.bio}
-                        <p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                            {tutor.bio}
-                        </p>
-                    {/if}
-
-                    <div class="space-y-1 text-xs text-muted-foreground pt-1">
-                        <div class="flex items-center gap-1.5 truncate">
-                            <Mail class="size-3 text-muted-foreground" />
-                            <span class="truncate">{tutor.email}</span>
-                        </div>
-                        {#if tutor.phone}
-                            <div class="flex items-center gap-1.5 truncate">
-                                <Phone class="size-3 text-muted-foreground" />
-                                <span>{tutor.phone}</span>
-                            </div>
+                    <div class="min-w-0">
+                        <div class="font-semibold text-foreground text-xs">{row.name}</div>
+                        {#if row.title}
+                            <div class="text-[11px] text-muted-foreground truncate">{row.title}</div>
                         {/if}
                     </div>
                 </div>
-
-                <div class="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                    <span class="inline-flex items-center gap-1 font-medium">
-                        <BookOpen class="size-3.5 text-indigo-600" />
-                        <span>{tutor.courses_count || 0} Kelas Diampu</span>
-                    </span>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-semibold {tutor.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}">
-                        {tutor.is_active ? 'AKTIF' : 'NONAKTIF'}
-                    </span>
+            {:else if column.key === 'email'}
+                <div class="space-y-0.5 text-[11px]">
+                    <div class="flex items-center gap-1.5 text-foreground">
+                        <Mail class="size-3 text-muted-foreground" />
+                        <span>{row.email}</span>
+                    </div>
+                    {#if row.phone}
+                        <div class="flex items-center gap-1.5 text-muted-foreground">
+                            <Phone class="size-3" />
+                            <span>{row.phone}</span>
+                        </div>
+                    {/if}
                 </div>
+            {:else if column.key === 'specialization'}
+                <span class="text-[11px] font-medium text-foreground">
+                    {row.specialization || '-'}
+                </span>
+            {:else if column.key === 'courses_count'}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted font-medium text-[11px]">
+                    <BookOpen class="size-3 text-indigo-500" />
+                    <span>{row.courses_count ?? 0}</span>
+                </span>
+            {:else if column.key === 'is_active'}
+                <span class="px-2 py-0.5 rounded text-[10px] font-semibold {row.is_active ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-muted text-muted-foreground'}">
+                    {row.is_active ? 'Aktif' : 'Nonaktif'}
+                </span>
+            {/if}
+        {/snippet}
+
+        {#snippet actions({ row })}
+            <div class="flex items-center justify-end gap-1.5">
+                <button
+                    type="button"
+                    onclick={() => openEditTutor(row)}
+                    title="Edit"
+                    class="p-1.5 rounded-lg border border-border hover:bg-muted text-foreground transition-colors"
+                >
+                    <Edit3 class="size-3.5" />
+                </button>
+                <button
+                    type="button"
+                    onclick={() => deleteTutor(row)}
+                    title="Hapus"
+                    class="p-1.5 rounded-lg border border-border hover:bg-rose-50 dark:hover:bg-rose-950/50 text-rose-600 transition-colors"
+                >
+                    <Trash2 class="size-3.5" />
+                </button>
             </div>
-        {/each}
-    </div>
+        {/snippet}
+    </DataTable>
 </div>
 
 <!-- Modal: Tambah / Edit Tutor -->
@@ -244,7 +216,7 @@
         <div class="bg-card border border-border rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-border/80">
                 <h3 class="text-base font-bold text-foreground">
-                    {editingTutor ? 'Edit Data Tutor' : 'Daftarkan Tutor Baru'}
+                    {editingTutor ? 'Edit Data Tutor' : 'Tambah Tutor Baru'}
                 </h3>
                 <button
                     type="button"
@@ -263,7 +235,7 @@
                         required
                         placeholder="Contoh: Dr. Budi Santoso, M.Kom"
                         bind:value={tutorForm.name}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30 focus:border-indigo-500"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:border-indigo-500 focus:outline-hidden"
                     />
                 </div>
 
@@ -275,7 +247,7 @@
                             required
                             placeholder="budi.santoso@eduja.academy"
                             bind:value={tutorForm.email}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
                     <div>
@@ -284,7 +256,7 @@
                             type="text"
                             placeholder="+62 812..."
                             bind:value={tutorForm.phone}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
                 </div>
@@ -294,18 +266,18 @@
                         <label class="block font-semibold text-foreground mb-1">Jabatan / Gelar Profesional</label>
                         <input
                             type="text"
-                            placeholder="Contoh: VP of Artificial Intelligence"
+                            placeholder="VP of Artificial Intelligence"
                             bind:value={tutorForm.title}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
                     <div>
                         <label class="block font-semibold text-foreground mb-1">Spesialisasi Keahlian</label>
                         <input
                             type="text"
-                            placeholder="AI, Cloud, Leadership, Agile..."
+                            placeholder="AI, Cloud, Agile..."
                             bind:value={tutorForm.specialization}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
                 </div>
@@ -316,7 +288,7 @@
                         type="url"
                         placeholder="https://images.unsplash.com/..."
                         bind:value={tutorForm.avatar_url}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                     />
                 </div>
 
@@ -324,9 +296,9 @@
                     <label class="block font-semibold text-foreground mb-1">Biografi Singkat</label>
                     <textarea
                         rows="3"
-                        placeholder="Pengalaman karir dan rekam jejak industri instruktur..."
+                        placeholder="Profil pengalaman mengajar dan keahlian praktis..."
                         bind:value={tutorForm.bio}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-muted/30"
+                        class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                     ></textarea>
                 </div>
 

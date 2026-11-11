@@ -155,6 +155,7 @@ class DatabaseSeeder extends Seeder
                 'Pemecahan Masalah' => 20,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         $course2 = Course::create([
@@ -174,6 +175,7 @@ class DatabaseSeeder extends Seeder
                 'Manajemen Proyek' => 15,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         $course3 = Course::create([
@@ -193,6 +195,7 @@ class DatabaseSeeder extends Seeder
                 'Pemecahan Masalah' => 20,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         $course4 = Course::create([
@@ -212,6 +215,7 @@ class DatabaseSeeder extends Seeder
                 'Literasi Data & AI' => 15,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         $course5 = Course::create([
@@ -231,6 +235,7 @@ class DatabaseSeeder extends Seeder
                 'Pemecahan Masalah' => 20,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         $course6 = Course::create([
@@ -250,6 +255,7 @@ class DatabaseSeeder extends Seeder
                 'Pemecahan Masalah' => 20,
             ],
             'status' => 'published',
+            'due_date' => Carbon::now()->addDays(30),
         ]);
 
         // 5. Lessons for Course 1: Generative AI for Corporate Productivity
@@ -286,6 +292,69 @@ Generative AI bukan sekadar alat obrolan santai, melainkan akselerator kognitif 
                 ],
             ],
             'is_preview' => true,
+            'due_date' => Carbon::now()->addDays(14),
+            'pre_test' => [
+                'title' => 'Pre-Test: Pemahaman Awal AI & Keamanan Data Korporat',
+                'instructions' => 'Uji pemahaman dasar Anda sebelum menyimak materi video dan panduan modul ini.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'q1',
+                        'question' => 'Apa prinsip utama keamanan data saat menggunakan Generative AI di korporasi?',
+                        'options' => [
+                            'Memasukkan semua kata sandi server ke dalam prompt',
+                            'Zero Data Retention: tidak menggunakan data rahasia untuk melatih model publik',
+                            'Menonaktifkan enkripsi jaringan kantor',
+                            'Membagikan akun ke seluruh departemen tanpa audit',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Zero Data Retention memastikan prompt tidak disimpan atau dijadikan bahan training bagi publik.',
+                    ],
+                    [
+                        'id' => 'q2',
+                        'question' => 'Mengapa prinsip Human-in-the-Loop krusial dalam adopsi AI di bidang perbankan/hukum?',
+                        'options' => [
+                            'Karena AI tidak membutuhkan listrik',
+                            'Keputusan finansial dan legal memiliki risiko tinggi sehingga wajib divalidasi manusia',
+                            'Agar kecepatan respons AI berkurang',
+                            'Hanya formalitas tanpa dampak hukum',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Validasi manusia mencegah halusinasi AI yang berpotensi melanggar kepatuhan regulasi.',
+                    ],
+                ],
+            ],
+            'post_test' => [
+                'title' => 'Post-Test: Uji Pemahaman Penerapan AI Korporat',
+                'instructions' => 'Jawab soal evaluasi ini untuk memastikan Anda telah menguasai materi modul.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'post_q1',
+                        'question' => 'Apa kepanjangan dari UU PDP yang mengatur privasi data karyawan dan nasabah?',
+                        'options' => [
+                            'Perlindungan Data Pribadi',
+                            'Pengendalian Dokumen Perusahaan',
+                            'Protokol Digital Perbankan',
+                            'Pusat Data Pemerintahan',
+                        ],
+                        'correct_answer' => 0,
+                        'explanation' => 'UU PDP adalah Undang-Undang Perlindungan Data Pribadi yang mengatur sanksi pelanggaran kebocoran data.',
+                    ],
+                    [
+                        'id' => 'post_q2',
+                        'question' => 'Manakah langkah awal terbaik sebelum mengeksekusi automasi laporan dengan AI?',
+                        'options' => [
+                            'Langsung kirim hasil draft AI ke Dewan Direksi tanpa dibaca',
+                            'Anonimkan data sensitif (PII) sebelum memasukkannya ke sistem AI',
+                            'Hapus semua backup dokumen',
+                            'Gunakan koneksi Wi-Fi publik tanpa VPN',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Anonimisasi data mencegah paparan informasi pribadi atau rahasia perusahaan ke model AI.',
+                    ],
+                ],
+            ],
         ]);
 
         Lesson::create([
@@ -375,6 +444,69 @@ Dalam sesi ini, Dr. Budi Santoso membahas 3 mitos terbesar otomasi pekerjaan di 
 Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan korporasi.",
             'pdf_url' => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
             'is_preview' => true,
+            'due_date' => Carbon::now()->addDays(14),
+            'pre_test' => [
+                'title' => 'Pre-Test: Pemahaman Awal AI & Keamanan Data Korporat',
+                'instructions' => 'Uji pemahaman dasar Anda sebelum menyimak materi video dan panduan modul ini.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'q1',
+                        'question' => 'Apa prinsip utama keamanan data saat menggunakan Generative AI di korporasi?',
+                        'options' => [
+                            'Memasukkan semua kata sandi server ke dalam prompt',
+                            'Zero Data Retention: tidak menggunakan data rahasia untuk melatih model publik',
+                            'Menonaktifkan enkripsi jaringan kantor',
+                            'Membagikan akun ke seluruh departemen tanpa audit',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Zero Data Retention memastikan prompt tidak disimpan atau dijadikan bahan training bagi publik.',
+                    ],
+                    [
+                        'id' => 'q2',
+                        'question' => 'Mengapa prinsip Human-in-the-Loop krusial dalam adopsi AI di bidang perbankan/hukum?',
+                        'options' => [
+                            'Karena AI tidak membutuhkan listrik',
+                            'Keputusan finansial dan legal memiliki risiko tinggi sehingga wajib divalidasi manusia',
+                            'Agar kecepatan respons AI berkurang',
+                            'Hanya formalitas tanpa dampak hukum',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Validasi manusia mencegah halusinasi AI yang berpotensi melanggar kepatuhan regulasi.',
+                    ],
+                ],
+            ],
+            'post_test' => [
+                'title' => 'Post-Test: Uji Pemahaman Penerapan AI Korporat',
+                'instructions' => 'Jawab soal evaluasi ini untuk memastikan Anda telah menguasai materi modul.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'post_q1',
+                        'question' => 'Apa kepanjangan dari UU PDP yang mengatur privasi data karyawan dan nasabah?',
+                        'options' => [
+                            'Perlindungan Data Pribadi',
+                            'Pengendalian Dokumen Perusahaan',
+                            'Protokol Digital Perbankan',
+                            'Pusat Data Pemerintahan',
+                        ],
+                        'correct_answer' => 0,
+                        'explanation' => 'UU PDP adalah Undang-Undang Perlindungan Data Pribadi yang mengatur sanksi pelanggaran kebocoran data.',
+                    ],
+                    [
+                        'id' => 'post_q2',
+                        'question' => 'Manakah langkah awal terbaik sebelum mengeksekusi automasi laporan dengan AI?',
+                        'options' => [
+                            'Langsung kirim hasil draft AI ke Dewan Direksi tanpa dibaca',
+                            'Anonimkan data sensitif (PII) sebelum memasukkannya ke sistem AI',
+                            'Hapus semua backup dokumen',
+                            'Gunakan koneksi Wi-Fi publik tanpa VPN',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Anonimisasi data mencegah paparan informasi pribadi atau rahasia perusahaan ke model AI.',
+                    ],
+                ],
+            ],
         ]);
 
         Lesson::create([
@@ -404,6 +536,69 @@ Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan
             'video_url' => 'https://www.youtube.com/watch?v=XU0llRltyFM',
             'content_text' => "Memahami peran Product Owner, Scrum Master, dan Development Team secara presisi.",
             'is_preview' => true,
+            'due_date' => Carbon::now()->addDays(14),
+            'pre_test' => [
+                'title' => 'Pre-Test: Pemahaman Awal AI & Keamanan Data Korporat',
+                'instructions' => 'Uji pemahaman dasar Anda sebelum menyimak materi video dan panduan modul ini.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'q1',
+                        'question' => 'Apa prinsip utama keamanan data saat menggunakan Generative AI di korporasi?',
+                        'options' => [
+                            'Memasukkan semua kata sandi server ke dalam prompt',
+                            'Zero Data Retention: tidak menggunakan data rahasia untuk melatih model publik',
+                            'Menonaktifkan enkripsi jaringan kantor',
+                            'Membagikan akun ke seluruh departemen tanpa audit',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Zero Data Retention memastikan prompt tidak disimpan atau dijadikan bahan training bagi publik.',
+                    ],
+                    [
+                        'id' => 'q2',
+                        'question' => 'Mengapa prinsip Human-in-the-Loop krusial dalam adopsi AI di bidang perbankan/hukum?',
+                        'options' => [
+                            'Karena AI tidak membutuhkan listrik',
+                            'Keputusan finansial dan legal memiliki risiko tinggi sehingga wajib divalidasi manusia',
+                            'Agar kecepatan respons AI berkurang',
+                            'Hanya formalitas tanpa dampak hukum',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Validasi manusia mencegah halusinasi AI yang berpotensi melanggar kepatuhan regulasi.',
+                    ],
+                ],
+            ],
+            'post_test' => [
+                'title' => 'Post-Test: Uji Pemahaman Penerapan AI Korporat',
+                'instructions' => 'Jawab soal evaluasi ini untuk memastikan Anda telah menguasai materi modul.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'post_q1',
+                        'question' => 'Apa kepanjangan dari UU PDP yang mengatur privasi data karyawan dan nasabah?',
+                        'options' => [
+                            'Perlindungan Data Pribadi',
+                            'Pengendalian Dokumen Perusahaan',
+                            'Protokol Digital Perbankan',
+                            'Pusat Data Pemerintahan',
+                        ],
+                        'correct_answer' => 0,
+                        'explanation' => 'UU PDP adalah Undang-Undang Perlindungan Data Pribadi yang mengatur sanksi pelanggaran kebocoran data.',
+                    ],
+                    [
+                        'id' => 'post_q2',
+                        'question' => 'Manakah langkah awal terbaik sebelum mengeksekusi automasi laporan dengan AI?',
+                        'options' => [
+                            'Langsung kirim hasil draft AI ke Dewan Direksi tanpa dibaca',
+                            'Anonimkan data sensitif (PII) sebelum memasukkannya ke sistem AI',
+                            'Hapus semua backup dokumen',
+                            'Gunakan koneksi Wi-Fi publik tanpa VPN',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Anonimisasi data mencegah paparan informasi pribadi atau rahasia perusahaan ke model AI.',
+                    ],
+                ],
+            ],
         ]);
 
         Lesson::create([
@@ -430,6 +625,69 @@ Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan
             'video_url' => 'https://www.youtube.com/watch?v=k48k1q6d_gU',
             'content_text' => "Jangan mulai presentasi dengan metodologi bertele-tele. Langsung beritahukan rekomendasi tindakan!",
             'is_preview' => true,
+            'due_date' => Carbon::now()->addDays(14),
+            'pre_test' => [
+                'title' => 'Pre-Test: Pemahaman Awal AI & Keamanan Data Korporat',
+                'instructions' => 'Uji pemahaman dasar Anda sebelum menyimak materi video dan panduan modul ini.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'q1',
+                        'question' => 'Apa prinsip utama keamanan data saat menggunakan Generative AI di korporasi?',
+                        'options' => [
+                            'Memasukkan semua kata sandi server ke dalam prompt',
+                            'Zero Data Retention: tidak menggunakan data rahasia untuk melatih model publik',
+                            'Menonaktifkan enkripsi jaringan kantor',
+                            'Membagikan akun ke seluruh departemen tanpa audit',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Zero Data Retention memastikan prompt tidak disimpan atau dijadikan bahan training bagi publik.',
+                    ],
+                    [
+                        'id' => 'q2',
+                        'question' => 'Mengapa prinsip Human-in-the-Loop krusial dalam adopsi AI di bidang perbankan/hukum?',
+                        'options' => [
+                            'Karena AI tidak membutuhkan listrik',
+                            'Keputusan finansial dan legal memiliki risiko tinggi sehingga wajib divalidasi manusia',
+                            'Agar kecepatan respons AI berkurang',
+                            'Hanya formalitas tanpa dampak hukum',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Validasi manusia mencegah halusinasi AI yang berpotensi melanggar kepatuhan regulasi.',
+                    ],
+                ],
+            ],
+            'post_test' => [
+                'title' => 'Post-Test: Uji Pemahaman Penerapan AI Korporat',
+                'instructions' => 'Jawab soal evaluasi ini untuk memastikan Anda telah menguasai materi modul.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'post_q1',
+                        'question' => 'Apa kepanjangan dari UU PDP yang mengatur privasi data karyawan dan nasabah?',
+                        'options' => [
+                            'Perlindungan Data Pribadi',
+                            'Pengendalian Dokumen Perusahaan',
+                            'Protokol Digital Perbankan',
+                            'Pusat Data Pemerintahan',
+                        ],
+                        'correct_answer' => 0,
+                        'explanation' => 'UU PDP adalah Undang-Undang Perlindungan Data Pribadi yang mengatur sanksi pelanggaran kebocoran data.',
+                    ],
+                    [
+                        'id' => 'post_q2',
+                        'question' => 'Manakah langkah awal terbaik sebelum mengeksekusi automasi laporan dengan AI?',
+                        'options' => [
+                            'Langsung kirim hasil draft AI ke Dewan Direksi tanpa dibaca',
+                            'Anonimkan data sensitif (PII) sebelum memasukkannya ke sistem AI',
+                            'Hapus semua backup dokumen',
+                            'Gunakan koneksi Wi-Fi publik tanpa VPN',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Anonimisasi data mencegah paparan informasi pribadi atau rahasia perusahaan ke model AI.',
+                    ],
+                ],
+            ],
         ]);
 
         // Lessons for Course 5
@@ -443,6 +701,69 @@ Pelajari metode Eisen-Matrix dan cara menyelaraskan keputusan dengan OKR tahunan
             'content_type' => 'video',
             'video_url' => 'https://www.youtube.com/watch?v=1x8_wT7k8U8',
             'is_preview' => true,
+            'due_date' => Carbon::now()->addDays(14),
+            'pre_test' => [
+                'title' => 'Pre-Test: Pemahaman Awal AI & Keamanan Data Korporat',
+                'instructions' => 'Uji pemahaman dasar Anda sebelum menyimak materi video dan panduan modul ini.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'q1',
+                        'question' => 'Apa prinsip utama keamanan data saat menggunakan Generative AI di korporasi?',
+                        'options' => [
+                            'Memasukkan semua kata sandi server ke dalam prompt',
+                            'Zero Data Retention: tidak menggunakan data rahasia untuk melatih model publik',
+                            'Menonaktifkan enkripsi jaringan kantor',
+                            'Membagikan akun ke seluruh departemen tanpa audit',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Zero Data Retention memastikan prompt tidak disimpan atau dijadikan bahan training bagi publik.',
+                    ],
+                    [
+                        'id' => 'q2',
+                        'question' => 'Mengapa prinsip Human-in-the-Loop krusial dalam adopsi AI di bidang perbankan/hukum?',
+                        'options' => [
+                            'Karena AI tidak membutuhkan listrik',
+                            'Keputusan finansial dan legal memiliki risiko tinggi sehingga wajib divalidasi manusia',
+                            'Agar kecepatan respons AI berkurang',
+                            'Hanya formalitas tanpa dampak hukum',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Validasi manusia mencegah halusinasi AI yang berpotensi melanggar kepatuhan regulasi.',
+                    ],
+                ],
+            ],
+            'post_test' => [
+                'title' => 'Post-Test: Uji Pemahaman Penerapan AI Korporat',
+                'instructions' => 'Jawab soal evaluasi ini untuk memastikan Anda telah menguasai materi modul.',
+                'passing_score' => 70,
+                'questions' => [
+                    [
+                        'id' => 'post_q1',
+                        'question' => 'Apa kepanjangan dari UU PDP yang mengatur privasi data karyawan dan nasabah?',
+                        'options' => [
+                            'Perlindungan Data Pribadi',
+                            'Pengendalian Dokumen Perusahaan',
+                            'Protokol Digital Perbankan',
+                            'Pusat Data Pemerintahan',
+                        ],
+                        'correct_answer' => 0,
+                        'explanation' => 'UU PDP adalah Undang-Undang Perlindungan Data Pribadi yang mengatur sanksi pelanggaran kebocoran data.',
+                    ],
+                    [
+                        'id' => 'post_q2',
+                        'question' => 'Manakah langkah awal terbaik sebelum mengeksekusi automasi laporan dengan AI?',
+                        'options' => [
+                            'Langsung kirim hasil draft AI ke Dewan Direksi tanpa dibaca',
+                            'Anonimkan data sensitif (PII) sebelum memasukkannya ke sistem AI',
+                            'Hapus semua backup dokumen',
+                            'Gunakan koneksi Wi-Fi publik tanpa VPN',
+                        ],
+                        'correct_answer' => 1,
+                        'explanation' => 'Anonimisasi data mencegah paparan informasi pribadi atau rahasia perusahaan ke model AI.',
+                    ],
+                ],
+            ],
         ]);
 
         // 6. Users: Admins and Employees

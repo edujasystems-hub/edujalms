@@ -98,6 +98,7 @@ class CourseController extends Controller
             'estimated_duration_hours' => 'required|numeric|min:0.5',
             'thumbnail_url' => 'nullable|url',
             'status' => 'required|in:draft,published,archived',
+            'due_date' => 'nullable|date',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(4);
@@ -120,6 +121,7 @@ class CourseController extends Controller
             'estimated_duration_hours' => 'required|numeric|min:0.5',
             'thumbnail_url' => 'nullable|url',
             'status' => 'required|in:draft,published,archived',
+            'due_date' => 'nullable|date',
         ]);
 
         $course->update($validated);

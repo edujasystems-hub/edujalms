@@ -32,6 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin Routes
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        // Admin Dashboard
+        Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
+
         // Course Management (Pengelolaan Kelas)
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
         Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');

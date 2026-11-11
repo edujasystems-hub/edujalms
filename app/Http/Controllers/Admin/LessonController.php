@@ -23,6 +23,9 @@ class LessonController extends Controller
             'pdf_url' => 'nullable|string',
             'attachments' => 'nullable|array',
             'is_preview' => 'boolean',
+            'due_date' => 'nullable|date',
+            'pre_test' => 'nullable|array',
+            'post_test' => 'nullable|array',
         ]);
 
         $validated['course_id'] = $course->id;
@@ -50,6 +53,9 @@ class LessonController extends Controller
             'attachments' => 'nullable|array',
             'is_preview' => 'boolean',
             'sort_order' => 'nullable|integer',
+            'due_date' => 'nullable|date',
+            'pre_test' => 'nullable|array',
+            'post_test' => 'nullable|array',
         ]);
 
         $lesson->update($validated);

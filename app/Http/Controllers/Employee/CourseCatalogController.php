@@ -35,6 +35,7 @@ class CourseCatalogController extends Controller
                 'thumbnail_url' => $c->thumbnail_url,
                 'level' => $c->level,
                 'estimated_duration_hours' => $c->estimated_duration_hours,
+                'due_date' => $c->due_date ? $c->due_date->format('Y-m-d') : null,
                 'tutor' => $c->tutor,
                 'class_group' => $c->classGroup,
                 'company' => $c->company,

@@ -78,6 +78,7 @@ class SummaryController extends Controller
                 'thumbnail_url' => $course->thumbnail_url,
                 'level' => $course->level,
                 'estimated_duration_hours' => $course->estimated_duration_hours,
+                'due_date' => $course->due_date ? $course->due_date->format('Y-m-d') : null,
                 'tutor' => $course->tutor ? [
                     'id' => $course->tutor->id,
                     'name' => $course->tutor->name,

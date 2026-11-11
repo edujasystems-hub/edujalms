@@ -8,6 +8,8 @@
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/fontsource/css/gidole@latest/index.css" />
+
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.ts'])
