@@ -144,7 +144,7 @@
                 <span class="hidden sm:inline">Tampilkan:</span>
                 <select
                     bind:value={pageSize}
-                    class="px-2 py-1.5 text-xs rounded-lg bg-card border border-border text-foreground focus:outline-hidden focus:border-indigo-500"
+                    class="pl-2 pr-6 py-1.5 text-xs rounded-lg bg-card border border-border text-foreground focus:outline-hidden focus:border-indigo-500"
                 >
                     {#each pageSizeOptions as opt}
                         <option value={opt}>{opt}</option>
