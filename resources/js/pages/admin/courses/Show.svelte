@@ -145,6 +145,8 @@
 
     function openCreateLesson() {
         editingLesson = null;
+        saveSuccessMessage = '';
+        keepOpenAfterSave = false;
         lessonForm = {
             title: '',
             description: '',
@@ -177,6 +179,8 @@
 
     function openEditLesson(les: any) {
         editingLesson = les;
+        saveSuccessMessage = '';
+        keepOpenAfterSave = false;
         const pre = les.pre_test;
         const post = les.post_test;
 
@@ -211,6 +215,9 @@
     }
 
     let isSubmittingLesson = $state(false);
+    let keepOpenAfterSave = $state(false);
+    let saveSuccessMessage = $state('');
+    let lessonModalContentEl: HTMLDivElement | null = $state(null);
 
     function submitLesson(e: SubmitEvent) {
         e.preventDefault();
@@ -239,7 +246,18 @@
             });
         } else {
             router.post(`/admin/courses/${course.id}/lessons`, payload, {
-                onSuccess: () => (isLessonModalOpen = false),
+                onSuccess: () => {
+                    if (keepOpenAfterSave) {
+                        const savedTitle = lessonForm.title;
+                        openCreateLesson();
+                        saveSuccessMessage = `Pelajaran "${savedTitle}" berhasil disimpan! Silakan isi pelajaran berikutnya.`;
+                        setTimeout(() => {
+                            lessonModalContentEl?.scrollTo({ top: 0, behavior: 'smooth' });
+                        }, 50);
+                    } else {
+                        isLessonModalOpen = false;
+                    }
+                },
                 onFinish: () => (isSubmittingLesson = false),
             });
         }
@@ -525,7 +543,7 @@
 <!-- Modal: Tambah / Edit Pelajaran (dengan Pre-Test & Post-Test builder) -->
 {#if isLessonModalOpen}
     <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-        <div class="bg-card border border-border rounded-2xl w-full max-w-[95vw] md:w-[80vw] md:max-w-[80vw] max-h-[92vh] overflow-y-auto p-6 md:p-8 shadow-2xl space-y-4">
+        <div bind:this={lessonModalContentEl} class="bg-card border border-border rounded-2xl w-full max-w-[95vw] md:w-[80vw] md:max-w-[80vw] max-h-[92vh] overflow-y-auto p-6 md:p-8 shadow-2xl space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-border/80">
                 <h3 class="text-base font-bold text-foreground">
                     {editingLesson ? 'Edit Pelajaran' : 'Tambah Pelajaran Baru'}
@@ -538,6 +556,20 @@
                     <X class="size-5" />
                 </button>
             </div>
+
+            {#if saveSuccessMessage}
+                <div class="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium animate-in fade-in duration-200">
+                    <CheckCircle2 class="size-4 shrink-0" />
+                    <span class="flex-1">{saveSuccessMessage}</span>
+                    <button
+                        type="button"
+                        onclick={() => (saveSuccessMessage = '')}
+                        class="p-0.5 rounded text-muted-foreground hover:text-foreground"
+                    >
+                        <X class="size-3.5" />
+                    </button>
+                </div>
+            {/if}
 
             <form onsubmit={submitLesson} class="space-y-4 text-xs">
                 <div>
@@ -811,20 +843,32 @@
                     {/if}
                 </div>
 
-                <div class="flex items-center justify-end gap-2 pt-3 border-t border-border/80">
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-border/80">
                     <button
                         type="button"
                         onclick={() => (isLessonModalOpen = false)}
-                        class="px-4 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground"
+                        class="px-4 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors"
                     >
                         Batal
                     </button>
+                    {#if !editingLesson}
+                        <button
+                            type="submit"
+                            disabled={isSubmittingLesson}
+                            onclick={() => (keepOpenAfterSave = true)}
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors shadow-2xs disabled:opacity-60"
+                        >
+                            <Plus class="size-3.5" />
+                            <span>{isSubmittingLesson && keepOpenAfterSave ? 'Menyimpan...' : 'Simpan & Tambah Pelajaran Lagi'}</span>
+                        </button>
+                    {/if}
                     <button
                         type="submit"
                         disabled={isSubmittingLesson}
-                        class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs"
+                        onclick={() => (keepOpenAfterSave = false)}
+                        class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors disabled:opacity-60"
                     >
-                        {isSubmittingLesson ? 'Menyimpan...' : 'Simpan Pelajaran'}
+                        {isSubmittingLesson && !keepOpenAfterSave ? 'Menyimpan...' : editingLesson ? 'Perbarui Pelajaran' : 'Simpan Pelajaran'}
                     </button>
                 </div>
             </form>
