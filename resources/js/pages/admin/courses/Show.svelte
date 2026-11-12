@@ -33,6 +33,7 @@
     import Calendar from '@lucide/svelte/icons/calendar';
     import HelpCircle from '@lucide/svelte/icons/help-circle';
     import X from '@lucide/svelte/icons/x';
+    import { formatDate } from '@/lib/utils';
 
     interface TestQuestion {
         question: string;
@@ -359,7 +360,7 @@
                 {#if course.due_date}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                         <Calendar class="size-3" />
-                        <span>Batas: {String(course.due_date).substring(0, 10)}</span>
+                        <span>Batas: {formatDate(course.due_date)}</span>
                     </span>
                 {/if}
             </div>
@@ -437,7 +438,7 @@
                                     {#if lesson.due_date}
                                         <span class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                                             <Calendar class="size-2.5" />
-                                            <span>Batas: {String(lesson.due_date).substring(0, 10)}</span>
+                                            <span>Batas: {formatDate(lesson.due_date)}</span>
                                         </span>
                                     {/if}
 

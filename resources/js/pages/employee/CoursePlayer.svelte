@@ -39,6 +39,7 @@
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
     import X from '@lucide/svelte/icons/x';
     import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+    import { formatDate } from '@/lib/utils';
 
     interface QuizQuestion {
         id: string;
@@ -113,16 +114,6 @@
             onFinish: () => {
                 isCompletingCourse = false;
             },
-        });
-    }
-
-    function formatDate(dateStr?: string | null) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
         });
     }
 

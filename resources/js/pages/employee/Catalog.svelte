@@ -22,6 +22,7 @@
     import Layers from '@lucide/svelte/icons/layers';
     import Clock from '@lucide/svelte/icons/clock';
     import Calendar from '@lucide/svelte/icons/calendar';
+    import { formatDate } from '@/lib/utils';
 
     let {
         courses = [],
@@ -137,7 +138,7 @@
                         {#if course.due_date}
                             <div class="flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-medium">
                                 <Calendar class="size-3" />
-                                <span>Batas: {course.due_date}</span>
+                                <span>Batas: {formatDate(course.due_date)}</span>
                             </div>
                         {/if}
                     </div>

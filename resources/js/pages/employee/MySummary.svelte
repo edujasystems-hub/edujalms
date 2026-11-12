@@ -29,6 +29,7 @@
     import Building2 from '@lucide/svelte/icons/building-2';
     import User from '@lucide/svelte/icons/user';
     import Calendar from '@lucide/svelte/icons/calendar';
+    import { formatDate } from '@/lib/utils';
 
     interface TutorInfo {
         id: number;
@@ -107,15 +108,6 @@
         }
     }
 
-    function formatDate(dateStr?: string | null) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('id-ID', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        });
-    }
 </script>
 
 <AppHead title="My Summary" />
