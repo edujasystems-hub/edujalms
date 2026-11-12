@@ -30,6 +30,7 @@
     import Building2 from '@lucide/svelte/icons/building-2';
     import User from '@lucide/svelte/icons/user';
     import Calendar from '@lucide/svelte/icons/calendar';
+    import ChevronRight from '@lucide/svelte/icons/chevron-right';
     import { formatDate } from '@/lib/utils';
 
     interface TutorInfo {
@@ -251,131 +252,53 @@
                 </div>
             {:else}
                 <div class="space-y-3">
-                    {#each recentClasses as course, idx (course.id)}
-                        <div class="group relative rounded-xl border border-border bg-card p-4 hover:border-indigo-400/50 hover:shadow-xs transition-all">
-                            <div class="flex flex-col sm:flex-row gap-4">
-                                <!-- Thumbnail -->
-                                <div class="relative sm:size-24 shrink-0 overflow-hidden rounded-lg bg-muted border border-border/50 aspect-video sm:aspect-square">
-                                    {#if course.thumbnail_url}
-                                        <img
-                                            src={course.thumbnail_url}
-                                            alt={course.title}
-                                            class="size-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
-                                    {:else}
-                                        <div class="size-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-950 dark:to-slate-900 text-indigo-600">
-                                            <BookOpen class="size-6" />
-                                        </div>
-                                    {/if}
-                                    <div class="absolute top-1 left-1">
-                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-bold tracking-wider uppercase bg-black/70 text-white">
-                                            #{idx + 1}
-                                        </span>
+                    {#each recentClasses as course (course.id)}
+                        <Link
+                            href="/learn/{course.slug}"
+                            class="group relative rounded-2xl border border-border bg-card p-3 sm:p-3.5 hover:border-indigo-400/60 hover:shadow-xs transition-all flex items-center gap-3 sm:gap-4"
+                        >
+                            <!-- Thumbnail ratio 1:1 dengan Progress Badge di pojok kanan -->
+                            <div class="relative size-20 sm:size-22 shrink-0 overflow-hidden rounded-xl bg-muted border border-border/50 aspect-square">
+                                {#if course.thumbnail_url}
+                                    <img
+                                        src={course.thumbnail_url}
+                                        alt={course.title}
+                                        class="size-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                {:else}
+                                    <div class="size-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-950 dark:to-slate-900 text-indigo-600">
+                                        <BookOpen class="size-6" />
                                     </div>
-                                </div>
+                                {/if}
 
-                                <!-- Details -->
-                                <div class="flex-1 flex flex-col justify-between min-w-0">
-                                    <div>
-                                        <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
-                                            {#if course.class_group}
-                                                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300">
-                                                    {course.class_group.name}
-                                                </span>
-                                            {/if}
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                                                {formatLevel(course.level)}
-                                            </span>
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-                                                ⏱️ {course.estimated_duration_hours} Jam
-                                            </span>
-                                            {#if course.due_date}
-                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900/40">
-                                                    <Calendar class="size-3" />
-                                                    Tenggat: {formatDate(course.due_date)}
-                                                </span>
-                                            {/if}
-                                        </div>
-
-                                        <h3 class="text-sm font-bold text-foreground leading-snug line-clamp-1 group-hover:text-indigo-600 transition-colors">
-                                            <Link href="/learn/{course.slug}">
-                                                {course.title}
-                                            </Link>
-                                        </h3>
-
-                                        {#if course.tutor}
-                                            <div class="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                                                {#if course.tutor.avatar_url}
-                                                    <img
-                                                        src={course.tutor.avatar_url}
-                                                        alt={course.tutor.name}
-                                                        class="size-4 rounded-full object-cover border border-border"
-                                                    />
-                                                {/if}
-                                                <span class="truncate">Tutor: <span class="font-medium text-foreground/90">{course.tutor.name}</span></span>
-                                            </div>
-                                        {/if}
-                                    </div>
-
-                                    <!-- Progress Bar and Action Button -->
-                                    <div class="mt-2.5 pt-2 border-t border-border/40">
-                                        <div class="flex items-center justify-between text-xs mb-1">
-                                            <span class="text-[11px] text-muted-foreground">
-                                                {course.completed_lessons} / {course.total_lessons} Modul Selesai
-                                            </span>
-                                            <span class="font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
-                                                {course.progress_percent}%
-                                            </span>
-                                        </div>
-
-                                        <div class="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-                                            <div
-                                                class="h-full rounded-full transition-all duration-500 {course.progress_percent === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-indigo-600'}"
-                                                style="width: {course.progress_percent}%"
-                                            ></div>
-                                        </div>
-
-                                        <div class="mt-2.5 flex items-center justify-between gap-2">
-                                            <div class="text-[11px]">
-                                                {#if course.progress_percent === 100}
-                                                    <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
-                                                        <CheckCircle2 class="size-3.5" /> Selesai
-                                                    </span>
-                                                {:else if course.progress_percent > 0}
-                                                    <span class="text-amber-600 dark:text-amber-400 font-medium">
-                                                        Sedang Berjalan
-                                                    </span>
-                                                {:else}
-                                                    <span class="text-muted-foreground font-medium">
-                                                        Belum Dimulai
-                                                    </span>
-                                                {/if}
-                                            </div>
-
-                                            <div class="flex items-center gap-1.5">
-                                                {#if course.progress_percent === 100 || course.status === 'completed'}
-                                                    <button
-                                                        type="button"
-                                                        onclick={() => openCertificate(course)}
-                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30 transition-colors shadow-2xs"
-                                                    >
-                                                        <Award class="size-3.5" />
-                                                        <span>Sertifikat</span>
-                                                    </button>
-                                                {/if}
-                                                <Link
-                                                    href="/learn/{course.slug}"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all {course.progress_percent === 100 ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs'}"
-                                                >
-                                                    <PlayCircle class="size-3.5" />
-                                                    <span>{course.progress_percent === 100 ? 'Review' : 'Lanjutkan'}</span>
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!-- Badge Progress di Pojok Kanan Image -->
+                                <div class="absolute top-1.5 right-1.5">
+                                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold shadow-xs backdrop-blur-xs {course.progress_percent === 100 ? 'bg-emerald-600 text-white' : 'bg-black/75 text-white'}">
+                                        {course.progress_percent}%
+                                    </span>
                                 </div>
                             </div>
-                        </div>
+
+                            <!-- Di Kanannya: Kategori, Nama Kelas, dan Batas Tanggal (Exp.) -->
+                            <div class="flex-1 min-w-0 flex flex-col justify-center space-y-1">
+                                {#if course.class_group}
+                                    <span class="text-[10px] sm:text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 truncate">
+                                        {course.class_group.name}
+                                    </span>
+                                {/if}
+
+                                <h3 class="text-xs sm:text-sm font-bold text-foreground leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                                    {course.title}
+                                </h3>
+
+                                <div class="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground font-medium pt-0.5">
+                                    <Calendar class="size-3 text-muted-foreground/70 shrink-0" />
+                                    <span>Exp. {course.due_date ? formatDate(course.due_date) : '-'}</span>
+                                </div>
+                            </div>
+
+                            <ChevronRight class="size-4 text-muted-foreground/40 group-hover:text-foreground shrink-0 transition-transform group-hover:translate-x-0.5 ml-auto" />
+                        </Link>
                     {/each}
                 </div>
             {/if}
