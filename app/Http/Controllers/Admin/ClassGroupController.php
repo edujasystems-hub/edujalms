@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
 use App\Models\Course;
+use App\Models\EmployeeGroup;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -15,10 +16,11 @@ class ClassGroupController extends Controller
 {
     public function index(): Response
     {
-        $classGroups = ClassGroup::withCount(['courses', 'employees'])
+        $classGroups = ClassGroup::withCount(['courses', 'employees', 'employeeGroups'])
             ->with([
                 'courses' => fn ($q) => $q->select('id', 'class_group_id', 'title', 'slug', 'level', 'thumbnail_url'),
                 'employees' => fn ($q) => $q->select('users.id', 'users.name', 'users.email', 'users.avatar', 'users.position', 'users.company_id'),
+                'employeeGroups' => fn ($q) => $q->select('employee_groups.id', 'employee_groups.name', 'employee_groups.code', 'employee_groups.badge_color')->withCount('employees'),
             ])
             ->latest()
             ->get();
@@ -27,9 +29,14 @@ class ClassGroupController extends Controller
             ->with('company')
             ->get(['id', 'name', 'email', 'avatar', 'position', 'company_id']);
 
+        $allEmployeeGroups = EmployeeGroup::withCount('employees')
+            ->where('is_active', true)
+            ->get(['id', 'name', 'code', 'badge_color']);
+
         return Inertia::render('admin/groups/Index', [
             'classGroups' => $classGroups,
             'allEmployees' => $allEmployees,
+            'allEmployeeGroups' => $allEmployeeGroups,
         ]);
     }
 
@@ -98,5 +105,33 @@ class ClassGroupController extends Controller
         $classGroup->employees()->detach($user->id);
 
         return back()->with('success', "Employee '{$user->name}' telah dilepas dari grup '{$classGroup->name}'.");
+    }
+
+    public function assignEmployeeGroups(Request $request, ClassGroup $classGroup): \Illuminate\Http\RedirectResponse
+    {
+        $validated = $request->validate([
+            'employee_group_ids' => 'required|array',
+            'employee_group_ids.*' => 'exists:employee_groups,id',
+        ]);
+
+        $currentUserId = $request->user()->id;
+
+        foreach ($validated['employee_group_ids'] as $egId) {
+            $classGroup->employeeGroups()->syncWithoutDetaching([
+                $egId => [
+                    'assigned_by' => $currentUserId,
+                    'assigned_at' => now(),
+                ],
+            ]);
+        }
+
+        return back()->with('success', count($validated['employee_group_ids']) . " group karyawan berhasil di-assign ke group kelas '{$classGroup->name}'. Seluruh karyawan di dalamnya otomatis memperoleh akses.");
+    }
+
+    public function removeEmployeeGroup(Request $request, ClassGroup $classGroup, EmployeeGroup $employeeGroup): \Illuminate\Http\RedirectResponse
+    {
+        $classGroup->employeeGroups()->detach($employeeGroup->id);
+
+        return back()->with('success', "Group karyawan '{$employeeGroup->name}' telah dilepas dari group kelas '{$classGroup->name}'.");
     }
 }

@@ -73,6 +73,13 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             ->withPivot(['assigned_at', 'assigned_by']);
     }
 
+    public function employeeGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(EmployeeGroup::class, 'employee_group_user')
+            ->withPivot(['assigned_at', 'assigned_by'])
+            ->withTimestamps();
+    }
+
     public function enrolledCourses(): BelongsToMany
     {
         return $this->belongsToMany(Course::class, 'course_user')
@@ -113,7 +120,23 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         // Check group enrollment
         $courseModel = $course instanceof Course ? $course : Course::find($courseId);
         if ($courseModel && $courseModel->class_group_id) {
-            return $this->classGroups()->where('class_groups.id', $courseModel->class_group_id)->exists();
+            // Direct assignment to class group
+            if ($this->classGroups()->where('class_groups.id', $courseModel->class_group_id)->exists()) {
+                return true;
+            }
+
+            // Assignment via employee group assigned to this class group
+            $myEmployeeGroupIds = $this->employeeGroups()->pluck('employee_groups.id');
+            if ($myEmployeeGroupIds->isNotEmpty()) {
+                $hasEmployeeGroupAccess = \Illuminate\Support\Facades\DB::table('class_group_employee_group')
+                    ->where('class_group_id', $courseModel->class_group_id)
+                    ->whereIn('employee_group_id', $myEmployeeGroupIds)
+                    ->exists();
+
+                if ($hasEmployeeGroupAccess) {
+                    return true;
+                }
+            }
         }
 
         return false;
@@ -128,12 +151,24 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             return Course::with(['classGroup', 'tutor', 'company'])->get();
         }
 
+        // Direct class group enrollment
         $groupCourseIds = Course::whereIn('class_group_id', $this->classGroups()->pluck('class_groups.id'))
+            ->pluck('id');
+
+        // Via employee group assigned to class group
+        $myEmployeeGroupIds = $this->employeeGroups()->pluck('employee_groups.id');
+        $employeeGroupClassGroupIds = \Illuminate\Support\Facades\DB::table('class_group_employee_group')
+            ->whereIn('employee_group_id', $myEmployeeGroupIds)
+            ->pluck('class_group_id');
+        $employeeGroupCourseIds = Course::whereIn('class_group_id', $employeeGroupClassGroupIds)
             ->pluck('id');
 
         $directCourseIds = $this->enrolledCourses()->pluck('courses.id');
 
-        $allCourseIds = $groupCourseIds->merge($directCourseIds)->unique();
+        $allCourseIds = $groupCourseIds
+            ->merge($employeeGroupCourseIds)
+            ->merge($directCourseIds)
+            ->unique();
 
         return Course::whereIn('id', $allCourseIds)
             ->with(['classGroup', 'tutor', 'company'])

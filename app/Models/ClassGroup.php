@@ -38,4 +38,11 @@ class ClassGroup extends Model
             ->withPivot(['assigned_at', 'assigned_by'])
             ->withTimestamps();
     }
+
+    public function employeeGroups(): BelongsToMany
+    {
+        return $this->belongsToMany(EmployeeGroup::class, 'class_group_employee_group')
+            ->withPivot(['assigned_at', 'assigned_by'])
+            ->withTimestamps();
+    }
 }

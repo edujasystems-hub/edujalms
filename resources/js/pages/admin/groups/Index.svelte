@@ -20,6 +20,7 @@
     import Layers from '@lucide/svelte/icons/layers';
     import Plus from '@lucide/svelte/icons/plus';
     import Users from '@lucide/svelte/icons/users';
+    import UsersRound from '@lucide/svelte/icons/users-round';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import Trash2 from '@lucide/svelte/icons/trash-2';
     import Edit3 from '@lucide/svelte/icons/edit-3';
@@ -29,15 +30,18 @@
     let {
         classGroups = [],
         allEmployees = [],
+        allEmployeeGroups = [],
     }: {
         classGroups: any[];
         allEmployees: any[];
+        allEmployeeGroups: any[];
     } = $props();
 
     const columns: Column[] = [
         { key: 'name', label: 'Nama Kategori & Deskripsi', sortable: true },
-        { key: 'courses_count', label: 'Total Kelas', sortable: true, align: 'center', class: 'w-28' },
-        { key: 'employees_count', label: 'Karyawan', sortable: true, class: 'min-w-[200px]' },
+        { key: 'courses_count', label: 'Total Kelas', sortable: true, align: 'center', class: 'w-24' },
+        { key: 'employee_groups_count', label: 'Group Karyawan', sortable: true, class: 'min-w-[190px]' },
+        { key: 'employees_count', label: 'Karyawan Langsung', sortable: true, class: 'min-w-[170px]' },
         { key: 'is_active', label: 'Status', sortable: true, align: 'center', class: 'w-24' },
     ];
 
@@ -140,6 +144,44 @@
             router.delete(`/admin/groups/${grp.id}/remove-user/${emp.id}`);
         }
     }
+
+    // Assign Employee Groups Modal
+    let isAssignEmployeeGroupsModalOpen = $state(false);
+    let targetClassGroupForEmployeeGroups = $state<any | null>(null);
+    let selectedEmployeeGroupIds = $state<number[]>([]);
+
+    function openAssignEmployeeGroupsModal(grp: any) {
+        targetClassGroupForEmployeeGroups = grp;
+        selectedEmployeeGroupIds = (grp.employee_groups || []).map((eg: any) => eg.id);
+        isAssignEmployeeGroupsModalOpen = true;
+    }
+
+    function toggleSelectEmployeeGroup(egId: number) {
+        if (selectedEmployeeGroupIds.includes(egId)) {
+            selectedEmployeeGroupIds = selectedEmployeeGroupIds.filter((id) => id !== egId);
+        } else {
+            selectedEmployeeGroupIds = [...selectedEmployeeGroupIds, egId];
+        }
+    }
+
+    let isAssigningEmployeeGroups = $state(false);
+
+    function submitAssignEmployeeGroups() {
+        if (!targetClassGroupForEmployeeGroups) return;
+        isAssigningEmployeeGroups = true;
+        router.post(`/admin/groups/${targetClassGroupForEmployeeGroups.id}/assign-employee-groups`, { employee_group_ids: selectedEmployeeGroupIds }, {
+            onSuccess: () => {
+                isAssignEmployeeGroupsModalOpen = false;
+            },
+            onFinish: () => (isAssigningEmployeeGroups = false),
+        });
+    }
+
+    function removeEmployeeGroupFromClassGroup(grp: any, eg: any) {
+        if (confirm(`Lepas group karyawan '${eg.name}' dari '${grp.name}'?`)) {
+            router.delete(`/admin/groups/${grp.id}/remove-employee-group/${eg.id}`);
+        }
+    }
 </script>
 
 <AppHead title="Kategori Kelas - Corporate LMS" />
@@ -191,6 +233,37 @@
                     <BookOpen class="size-3 text-indigo-500" />
                     <span>{row.courses_count ?? 0}</span>
                 </span>
+            {:else if column.key === 'employee_groups_count'}
+                <div class="flex flex-wrap items-center gap-1.5">
+                    {#if (row.employee_groups || []).length === 0}
+                        <span class="text-[11px] text-muted-foreground italic">Belum ada group</span>
+                    {:else}
+                        {#each (row.employee_groups || []).slice(0, 2) as eg (eg.id)}
+                            <button
+                                type="button"
+                                title="{eg.name} ({eg.employees_count ?? 0} orang) - klik untuk lepas"
+                                onclick={() => removeEmployeeGroupFromClassGroup(row, eg)}
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                            >
+                                <UsersRound class="size-3 shrink-0" />
+                                <span class="truncate max-w-[90px]">{eg.name}</span>
+                            </button>
+                        {/each}
+                        {#if (row.employee_groups || []).length > 2}
+                            <span class="text-[10px] font-mono text-muted-foreground font-semibold">
+                                +{(row.employee_groups || []).length - 2}
+                            </span>
+                        {/if}
+                    {/if}
+                    <button
+                        type="button"
+                        onclick={() => openAssignEmployeeGroupsModal(row)}
+                        title="Atur Group Karyawan"
+                        class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted hover:bg-muted/80 text-foreground"
+                    >
+                        + Atur
+                    </button>
+                </div>
             {:else if column.key === 'employees_count'}
                 <div class="flex items-center gap-2">
                     <div class="flex -space-x-1.5 overflow-hidden">
@@ -224,8 +297,16 @@
             <div class="flex items-center justify-end gap-1.5">
                 <button
                     type="button"
+                    onclick={() => openAssignEmployeeGroupsModal(row)}
+                    title="Assign Group Karyawan"
+                    class="p-1.5 rounded-lg border border-border hover:bg-purple-50 dark:hover:bg-purple-950/50 hover:text-purple-600 transition-colors"
+                >
+                    <UsersRound class="size-3.5" />
+                </button>
+                <button
+                    type="button"
                     onclick={() => openAssignModal(row)}
-                    title="Assign Karyawan"
+                    title="Assign Karyawan Langsung"
                     class="p-1.5 rounded-lg border border-border hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-600 transition-colors"
                 >
                     <UserPlus class="size-3.5" />
@@ -392,6 +473,99 @@
                         class="px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs disabled:opacity-50"
                     >
                         {isAssigning ? 'Memproses...' : 'Simpan Akses'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
+<!-- Modal: Assign Group Karyawan ke Group Kelas Ini -->
+{#if isAssignEmployeeGroupsModalOpen && targetClassGroupForEmployeeGroups}
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-card border border-border rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-border/80">
+                <div>
+                    <h3 class="text-base font-bold text-foreground flex items-center gap-2">
+                        <UsersRound class="size-4.5 text-purple-600" />
+                        <span>Assign Group Karyawan</span>
+                    </h3>
+                    <p class="text-xs text-purple-600 font-semibold mt-0.5">
+                        Kategori: {targetClassGroupForEmployeeGroups.name}
+                    </p>
+                </div>
+                <button
+                    type="button"
+                    onclick={() => (isAssignEmployeeGroupsModalOpen = false)}
+                    class="p-1 rounded-lg hover:bg-muted text-muted-foreground"
+                >
+                    <X class="size-5" />
+                </button>
+            </div>
+
+            <p class="text-xs text-muted-foreground">
+                Setiap karyawan di dalam group karyawan yang dipilih akan <strong>otomatis memperoleh akses</strong> ke seluruh {targetClassGroupForEmployeeGroups.courses_count ?? 0} kelas dalam kategori ini.
+            </p>
+
+            <div class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {#if allEmployeeGroups.length === 0}
+                    <div class="p-6 text-center text-muted-foreground text-xs">
+                        Belum ada group karyawan yang dibuat. Buka menu Group Karyawan untuk membuatnya.
+                    </div>
+                {:else}
+                    {#each allEmployeeGroups as eg (eg.id)}
+                        {@const isSelected = selectedEmployeeGroupIds.includes(eg.id)}
+                        <label
+                            class="flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer {isSelected ? 'bg-purple-50/80 dark:bg-purple-950/60 border-purple-400 font-semibold shadow-xs' : 'border-border/70 hover:bg-muted/40'}"
+                        >
+                            <div class="flex items-center gap-3 min-w-0">
+                                <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onchange={() => toggleSelectEmployeeGroup(eg.id)}
+                                    class="size-4 rounded border-border text-purple-600 focus:ring-purple-500"
+                                />
+                                <div class="min-w-0">
+                                    <div class="text-xs text-foreground font-bold flex items-center gap-2">
+                                        <span>{eg.name}</span>
+                                        {#if eg.code}
+                                            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-muted text-muted-foreground font-normal">
+                                                {eg.code}
+                                            </span>
+                                        {/if}
+                                    </div>
+                                    <div class="text-[11px] text-muted-foreground font-normal">
+                                        {eg.employees_count ?? 0} Karyawan Terdaftar
+                                    </div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-muted text-muted-foreground shrink-0">
+                                {eg.badge_color}
+                            </span>
+                        </label>
+                    {/each}
+                {/if}
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-border/80">
+                <span class="text-xs text-muted-foreground">
+                    {selectedEmployeeGroupIds.length} group karyawan dipilih
+                </span>
+                <div class="flex gap-2">
+                    <button
+                        type="button"
+                        onclick={() => (isAssignEmployeeGroupsModalOpen = false)}
+                        class="px-4 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        disabled={isAssigningEmployeeGroups}
+                        onclick={submitAssignEmployeeGroups}
+                        class="px-5 py-2 rounded-xl text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow-xs disabled:opacity-50"
+                    >
+                        {isAssigningEmployeeGroups ? 'Memproses...' : 'Simpan Group'}
                     </button>
                 </div>
             </div>

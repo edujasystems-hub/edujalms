@@ -2,6 +2,7 @@
 
 use App\Models\ClassGroup;
 use App\Models\Course;
+use App\Models\EmployeeGroup;
 use App\Models\Lesson;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -206,5 +207,59 @@ test('employee and admin can view leaderboard', function () {
         ->has('companies')
         ->has('leaderboard')
     );
+});
+
+test('admin can manage employee groups and assign class groups to employee groups', function () {
+    $admin = User::where('role', 'admin')->first();
+    $employee = User::where('role', 'employee')->first();
+    $classGroup = ClassGroup::first();
+
+    // 1. Admin views employee groups page
+    $this->actingAs($admin)->get('/admin/employee-groups')->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/employee-groups/Index')
+            ->has('employeeGroups')
+            ->has('allEmployees')
+            ->has('allClassGroups')
+        );
+
+    // 2. Admin creates employee group
+    $response = $this->actingAs($admin)->post('/admin/employee-groups', [
+        'name' => 'Backend Core Team',
+        'code' => 'GRP-BE-01',
+        'badge_color' => 'indigo',
+        'is_active' => true,
+    ]);
+    $response->assertRedirect();
+
+    $employeeGroup = EmployeeGroup::where('name', 'Backend Core Team')->first();
+    expect($employeeGroup)->not->toBeNull();
+
+    // 3. Admin assigns employee to employee group
+    $this->actingAs($admin)->post("/admin/employee-groups/{$employeeGroup->id}/assign-employees", [
+        'user_ids' => [$employee->id],
+    ])->assertRedirect();
+
+    expect($employeeGroup->employees()->where('users.id', $employee->id)->exists())->toBeTrue();
+
+    // 4. Admin assigns class group to employee group
+    $this->actingAs($admin)->post("/admin/employee-groups/{$employeeGroup->id}/assign-class-groups", [
+        'class_group_ids' => [$classGroup->id],
+    ])->assertRedirect();
+
+    expect($employeeGroup->classGroups()->where('class_groups.id', $classGroup->id)->exists())->toBeTrue();
+
+    // 5. Verify employee now automatically has access to all courses in the class group
+    $coursesInClassGroup = Course::where('class_group_id', $classGroup->id)->get();
+    expect($coursesInClassGroup->count())->toBeGreaterThan(0);
+
+    foreach ($coursesInClassGroup as $c) {
+        expect($employee->hasAccessToCourse($c))->toBeTrue();
+    }
+
+    $accessibleCourses = $employee->getAccessibleCourses();
+    foreach ($coursesInClassGroup as $c) {
+        expect($accessibleCourses->contains('id', $c->id))->toBeTrue();
+    }
 });
 

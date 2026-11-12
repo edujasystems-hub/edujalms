@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ClassGroupController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\EmployeeGroupController;
 use App\Http\Controllers\Admin\LessonController;
 use App\Http\Controllers\Admin\TutorController;
 use App\Http\Controllers\DashboardController;
@@ -62,6 +63,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/groups/{classGroup}', [ClassGroupController::class, 'destroy'])->name('groups.destroy');
         Route::post('/groups/{classGroup}/assign', [ClassGroupController::class, 'assignEmployees'])->name('groups.assign');
         Route::delete('/groups/{classGroup}/remove-user/{user}', [ClassGroupController::class, 'removeEmployee'])->name('groups.remove-user');
+        Route::post('/groups/{classGroup}/assign-employee-groups', [ClassGroupController::class, 'assignEmployeeGroups'])->name('groups.assign-employee-groups');
+        Route::delete('/groups/{classGroup}/remove-employee-group/{employeeGroup}', [ClassGroupController::class, 'removeEmployeeGroup'])->name('groups.remove-employee-group');
+
+        // Employee Groups (Pengelolaan Group Karyawan & Assign Group Kelas)
+        Route::get('/employee-groups', [EmployeeGroupController::class, 'index'])->name('employee-groups.index');
+        Route::post('/employee-groups', [EmployeeGroupController::class, 'store'])->name('employee-groups.store');
+        Route::put('/employee-groups/{employeeGroup}', [EmployeeGroupController::class, 'update'])->name('employee-groups.update');
+        Route::delete('/employee-groups/{employeeGroup}', [EmployeeGroupController::class, 'destroy'])->name('employee-groups.destroy');
+        Route::post('/employee-groups/{employeeGroup}/assign-employees', [EmployeeGroupController::class, 'assignEmployees'])->name('employee-groups.assign-employees');
+        Route::delete('/employee-groups/{employeeGroup}/remove-employee/{user}', [EmployeeGroupController::class, 'removeEmployee'])->name('employee-groups.remove-employee');
+        Route::post('/employee-groups/{employeeGroup}/assign-class-groups', [EmployeeGroupController::class, 'assignClassGroups'])->name('employee-groups.assign-class-groups');
+        Route::delete('/employee-groups/{employeeGroup}/remove-class-group/{classGroup}', [EmployeeGroupController::class, 'removeClassGroup'])->name('employee-groups.remove-class-group');
 
         // Tutors (Pengelolaan Tutor)
         Route::get('/tutors', [TutorController::class, 'index'])->name('tutors.index');
