@@ -179,8 +179,8 @@
         </button>
     </div>
 
-    <!-- 4-Kolom Courses Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <!-- Courses Grid (2-kolom di mobile, 4-kolom di desktop) -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {#each courses as course (course.id)}
             <div class="group flex flex-col rounded-2xl border border-border bg-card overflow-hidden hover:border-indigo-400/60 hover:shadow-md transition-all">
                 <div class="relative aspect-video w-full overflow-hidden bg-muted">
@@ -195,21 +195,21 @@
                             <BookOpen class="size-8" />
                         </div>
                     {/if}
-                    <div class="absolute top-2 left-2 flex gap-1.5">
+                    <div class="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex gap-1.5">
                         {#if course.class_group}
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-black/75 text-white backdrop-blur-xs">
+                            <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-bold bg-black/75 text-white backdrop-blur-xs">
                                 {course.class_group.name}
                             </span>
                         {/if}
                     </div>
-                    <div class="absolute top-2 right-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold {course.status === 'published' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}">
+                    <div class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+                        <span class="px-1.5 sm:px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-semibold {course.status === 'published' ? 'bg-emerald-600 text-white' : 'bg-amber-600 text-white'}">
                             {course.status.toUpperCase()}
                         </span>
                     </div>
                 </div>
 
-                <div class="p-3.5 flex-1 flex flex-col justify-between space-y-3">
+                <div class="p-2.5 sm:p-3.5 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3">
                     <div class="space-y-1">
                         <h3 class="text-xs font-bold text-foreground leading-snug group-hover:text-indigo-600 transition-colors line-clamp-2">
                             <Link href="/admin/courses/{course.id}">
@@ -225,21 +225,21 @@
                         {/if}
                     </div>
 
-                    <div class="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+                    <div class="pt-2 border-t border-border/60 flex items-center justify-between text-[10px] sm:text-[11px] text-muted-foreground">
                         <span class="flex items-center gap-1">
                             <BookOpen class="size-3 text-indigo-500" />
                             <span>{course.lessons_count} Pelajaran</span>
                         </span>
                         <span class="flex items-center gap-1">
                             <Users class="size-3 text-emerald-500" />
-                            <span>{course.enrolled_users_count} Karyawan</span>
+                            <span>{course.enrolled_users_count}</span>
                         </span>
                     </div>
 
                     <div class="flex items-center justify-between gap-1.5">
                         <Link
                             href="/admin/courses/{course.id}"
-                            class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
+                            class="flex-1 inline-flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition-colors"
                         >
                             <Edit3 class="size-3.5" />
                             <span>Kelola</span>

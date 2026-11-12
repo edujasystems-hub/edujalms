@@ -222,7 +222,7 @@
                                                     style="width: {enr.progress_percent}%"
                                                 ></div>
                                             </div>
-                                            <span class="font-mono font-bold text-[11px] text-foreground">{enr.progress_percent}%</span>
+                                            <span class="font-bold text-[11px] text-foreground">{enr.progress_percent}%</span>
                                         </div>
                                     </td>
                                     <td class="p-3">

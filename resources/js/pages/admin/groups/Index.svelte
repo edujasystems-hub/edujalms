@@ -258,7 +258,7 @@
                             </button>
                         {/each}
                         {#if (row.employee_groups || []).length > 2}
-                            <span class="text-[10px] font-mono text-muted-foreground font-semibold">
+                            <span class="text-[10px] text-muted-foreground font-semibold">
                                 +{(row.employee_groups || []).length - 2}
                             </span>
                         {/if}

@@ -285,7 +285,7 @@
             <div class="space-y-1 min-w-[120px]">
                 <div class="flex justify-between text-xs">
                     <span class="font-medium text-muted-foreground">Progress Kelas</span>
-                    <span class="font-mono font-bold {course.is_completed || course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
+                    <span class="font-bold {course.is_completed || course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
                         {course.progress_percent}%
                     </span>
                 </div>
@@ -872,7 +872,7 @@
                             {course.completed_lessons} dari {course.total_lessons} selesai
                         </p>
                     </div>
-                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-muted">
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-muted">
                         {lessons.length} Modul
                     </span>
                 </div>
@@ -901,7 +901,7 @@
                             <!-- Lesson Info -->
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center justify-between gap-1 mb-0.5">
-                                    <span class="text-[10px] font-mono text-muted-foreground">
+                                    <span class="text-[10px] font-semibold text-muted-foreground">
                                         Modul #{lesson.sort_order}
                                     </span>
                                     <span class="text-[10px] uppercase font-medium px-1.5 py-0.2 rounded bg-muted/80 text-muted-foreground">
@@ -1004,7 +1004,7 @@
                         <!-- Lesson Info -->
                         <div class="min-w-0 flex-1">
                             <div class="flex items-center justify-between gap-1 mb-0.5">
-                                <span class="text-[10px] font-mono text-muted-foreground">
+                                <span class="text-[10px] font-semibold text-muted-foreground">
                                     Modul #{lesson.sort_order}
                                 </span>
                                 <span class="text-[10px] uppercase font-medium px-1.5 py-0.2 rounded bg-muted/80 text-muted-foreground">

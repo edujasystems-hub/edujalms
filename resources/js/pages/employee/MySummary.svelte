@@ -323,7 +323,7 @@
                                             <span class="text-[11px] text-muted-foreground">
                                                 {course.completed_lessons} / {course.total_lessons} Modul Selesai
                                             </span>
-                                            <span class="font-mono font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
+                                            <span class="font-bold {course.progress_percent === 100 ? 'text-emerald-600' : 'text-indigo-600'}">
                                                 {course.progress_percent}%
                                             </span>
                                         </div>
@@ -412,7 +412,7 @@
                         <div class="p-2 rounded-lg bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors">
                             <div class="flex items-center justify-between text-xs mb-1">
                                 <span class="font-semibold text-foreground">{comp.subject}</span>
-                                <div class="flex items-center gap-1.5 font-mono">
+                                <div class="flex items-center gap-1.5">
                                     <span class="font-bold {comp.score >= 85 ? 'text-emerald-600 dark:text-emerald-400' : comp.score >= 75 ? 'text-indigo-600 dark:text-indigo-400' : 'text-amber-600 dark:text-amber-400'}">
                                         {comp.score}
                                     </span>

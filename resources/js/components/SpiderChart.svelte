@@ -158,7 +158,7 @@
                 x="0"
                 y={-radius * lvl - 2}
                 text-anchor="middle"
-                class="text-[9px] font-mono fill-muted-foreground/60"
+                class="text-[9px] fill-muted-foreground/60"
             >
                 {Math.round(lvl * 100)}
             </text>
@@ -258,7 +258,7 @@
                     x={vertex.lx}
                     y={vertex.ly + vertex.dy + 8}
                     text-anchor={vertex.textAnchor}
-                    class="text-[10px] font-mono {isHovered ? 'fill-indigo-600 font-bold' : 'fill-muted-foreground'}"
+                    class="text-[10px] {isHovered ? 'fill-indigo-600 font-bold' : 'fill-muted-foreground'}"
                 >
                     {vertex.score} <tspan class="text-[8px] fill-muted-foreground/60">/ 100</tspan>
                 </text>
@@ -272,7 +272,7 @@
             <div class="flex items-center justify-between text-xs px-1">
                 <span class="font-bold text-foreground truncate">{activeItem.subject}</span>
                 <div class="flex items-center gap-1.5 shrink-0 ml-2">
-                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">{activeItem.score}</span>
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{activeItem.score}</span>
                     <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-card border border-border {getLevelBadge(activeItem.score).color}">
                         {getLevelBadge(activeItem.score).text}
                     </span>
@@ -282,7 +282,7 @@
             <div class="flex items-center justify-between text-xs px-1 text-muted-foreground">
                 <span class="text-[11px]">Rata-rata Kompetensi:</span>
                 <div class="flex items-center gap-1.5 font-semibold text-foreground">
-                    <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">{averageScore}</span>
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400 text-sm">{averageScore}</span>
                     <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-card border border-border">
                         {getLevelBadge(averageScore).text}
                     </span>
@@ -303,7 +303,7 @@
                 >
                     <span class="size-1.5 rounded-full {comp.score >= 85 ? 'bg-emerald-500' : comp.score >= 75 ? 'bg-indigo-500' : 'bg-amber-500'}"></span>
                     <span>{comp.subject}</span>
-                    <span class="font-mono font-bold text-[11px]">{comp.score}</span>
+                    <span class="font-bold text-[11px]">{comp.score}</span>
                 </button>
             {/each}
         </div>

@@ -425,7 +425,7 @@
                 {#each course.lessons as lesson, idx (lesson.id)}
                     <div class="rounded-2xl border border-border bg-card p-3.5 hover:border-indigo-400/60 shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div class="flex items-start gap-3 min-w-0">
-                            <div class="size-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
+                            <div class="size-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">
                                 #{idx + 1}
                             </div>
                             <div class="space-y-1 min-w-0">

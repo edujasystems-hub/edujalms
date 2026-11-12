@@ -145,7 +145,7 @@
                         </span>
                     </div>
                     <h3 class="text-base font-bold text-foreground">
-                        {currentUserStats.name} — <span class="font-mono text-amber-500">{currentUserStats.total_points} XP</span>
+                        {currentUserStats.name} — <span class="font-bold text-amber-500">{currentUserStats.total_points} XP</span>
                     </h3>
                     <p class="text-xs text-muted-foreground mt-0.5">
                         Anda telah menyelesaikan {currentUserStats.completed_courses_count} kelas di {currentUserStats.company_name}.
@@ -160,7 +160,7 @@
                 <div class="w-full sm:w-56 space-y-1">
                     <div class="flex justify-between text-[11px] font-medium text-muted-foreground">
                         <span>Progress Level</span>
-                        <span class="font-mono font-bold text-indigo-600">{currentUserStats.tier.progress_percent}%</span>
+                        <span class="font-bold text-indigo-600">{currentUserStats.tier.progress_percent}%</span>
                     </div>
                     <div class="w-full h-2 rounded-full bg-muted overflow-hidden">
                         <div
@@ -179,7 +179,7 @@
             <!-- Rank 2: Silver (Podium step 2) -->
             {#if podium.second}
                 <div class="order-2 md:order-1 rounded-2xl border border-slate-300 dark:border-slate-700 bg-gradient-to-b from-slate-100/80 to-card dark:from-slate-900/60 p-5 text-center space-y-3 relative overflow-hidden shadow-xs">
-                    <div class="absolute top-3 left-3 text-2xl font-black text-slate-400 font-mono">#2</div>
+                    <div class="absolute top-3 left-3 text-2xl font-black text-slate-400">#2</div>
                     <div class="size-16 rounded-full mx-auto bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-xl border-4 border-slate-300 dark:border-slate-700 shadow-md">
                         {getInitials(podium.second.name)}
                     </div>
@@ -196,12 +196,12 @@
                     <div class="p-2.5 rounded-xl bg-card/80 border border-border/80 flex items-center justify-around">
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-semibold">Skor</div>
-                            <div class="text-sm font-black text-amber-500 font-mono">{podium.second.total_points} XP</div>
+                            <div class="text-sm font-black text-amber-500">{podium.second.total_points} XP</div>
                         </div>
                         <div class="w-px h-6 bg-border"></div>
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-semibold">Kelas</div>
-                            <div class="text-sm font-bold text-foreground font-mono">{podium.second.completed_courses_count}</div>
+                            <div class="text-sm font-bold text-foreground">{podium.second.completed_courses_count}</div>
                         </div>
                     </div>
                 </div>
@@ -216,7 +216,7 @@
                         <Crown class="size-3" />
                         <span>Juara 1</span>
                     </div>
-                    <div class="absolute top-3 left-3 text-2xl font-black text-amber-500 font-mono">#1</div>
+                    <div class="absolute top-3 left-3 text-2xl font-black text-amber-500">#1</div>
                     <div class="relative size-20 rounded-full mx-auto bg-amber-500 text-white flex items-center justify-center font-extrabold text-2xl border-4 border-amber-300 dark:border-amber-400 shadow-xl shadow-amber-500/20">
                         {getInitials(podium.first.name)}
                         <span class="absolute -top-3 text-xl">👑</span>
@@ -238,12 +238,12 @@
                     <div class="p-3 rounded-xl bg-card border border-amber-300/60 dark:border-amber-700/60 flex items-center justify-around shadow-xs">
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-bold">Total Skor</div>
-                            <div class="text-base font-black text-amber-500 font-mono">{podium.first.total_points} XP</div>
+                            <div class="text-base font-black text-amber-500">{podium.first.total_points} XP</div>
                         </div>
                         <div class="w-px h-7 bg-border"></div>
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-bold">Kelas Selesai</div>
-                            <div class="text-base font-bold text-emerald-600 font-mono">{podium.first.completed_courses_count}</div>
+                            <div class="text-base font-bold text-emerald-600">{podium.first.completed_courses_count}</div>
                         </div>
                     </div>
                 </div>
@@ -252,7 +252,7 @@
             <!-- Rank 3: Bronze (Podium step 3) -->
             {#if podium.third}
                 <div class="order-3 md:order-3 rounded-2xl border border-amber-700/30 bg-gradient-to-b from-amber-900/10 to-card p-5 text-center space-y-3 relative overflow-hidden shadow-xs">
-                    <div class="absolute top-3 left-3 text-2xl font-black text-amber-700/60 font-mono">#3</div>
+                    <div class="absolute top-3 left-3 text-2xl font-black text-amber-700/60">#3</div>
                     <div class="size-16 rounded-full mx-auto bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 flex items-center justify-center font-bold text-xl border-4 border-amber-700/30 shadow-md">
                         {getInitials(podium.third.name)}
                     </div>
@@ -269,12 +269,12 @@
                     <div class="p-2.5 rounded-xl bg-card/80 border border-border/80 flex items-center justify-around">
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-semibold">Skor</div>
-                            <div class="text-sm font-black text-amber-500 font-mono">{podium.third.total_points} XP</div>
+                            <div class="text-sm font-black text-amber-500">{podium.third.total_points} XP</div>
                         </div>
                         <div class="w-px h-6 bg-border"></div>
                         <div>
                             <div class="text-[10px] text-muted-foreground uppercase font-semibold">Kelas</div>
-                            <div class="text-sm font-bold text-foreground font-mono">{podium.third.completed_courses_count}</div>
+                            <div class="text-sm font-bold text-foreground">{podium.third.completed_courses_count}</div>
                         </div>
                     </div>
                 </div>
@@ -344,13 +344,13 @@
                                 <!-- Rank -->
                                 <td class="py-3.5 px-4 text-center font-bold">
                                     {#if isTop1}
-                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-amber-500 text-white shadow-xs font-mono">1</span>
+                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-amber-500 text-white shadow-xs">1</span>
                                     {:else if isTop2}
-                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs font-mono">2</span>
+                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-xs">2</span>
                                     {:else if isTop3}
-                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-amber-700/20 text-amber-800 dark:text-amber-200 border border-amber-700/30 font-mono">3</span>
+                                        <span class="inline-flex items-center justify-center size-7 rounded-full bg-amber-700/20 text-amber-800 dark:text-amber-200 border border-amber-700/30">3</span>
                                     {:else}
-                                        <span class="text-muted-foreground font-mono">#{item.rank}</span>
+                                        <span class="text-muted-foreground">#{item.rank}</span>
                                     {/if}
                                 </td>
 
@@ -396,14 +396,14 @@
 
                                 <!-- Completed Courses -->
                                 <td class="py-3.5 px-4 text-center">
-                                    <span class="font-mono font-bold text-foreground">
+                                    <span class="font-bold text-foreground">
                                         {item.completed_courses_count}
                                     </span>
                                 </td>
 
                                 <!-- Points -->
                                 <td class="py-3.5 px-4 text-right">
-                                    <span class="font-mono font-extrabold text-amber-500 text-sm">
+                                    <span class="font-extrabold text-amber-500 text-sm">
                                         {item.total_points} XP
                                     </span>
                                 </td>

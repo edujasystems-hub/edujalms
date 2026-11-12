@@ -284,7 +284,7 @@
                             </td>
 
                             <td class="p-3">
-                                <span class="font-mono font-bold text-xs text-foreground">
+                                <span class="font-bold text-xs text-foreground">
                                     {emp.enrolled_courses.length}
                                 </span>
                                 <span class="text-muted-foreground text-[11px]"> kelas</span>

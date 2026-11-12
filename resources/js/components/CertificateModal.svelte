@@ -94,7 +94,7 @@
                     </div>
                     <div class="min-w-0">
                         <h3 class="text-sm font-bold text-foreground truncate">Sertifikat Kelulusan</h3>
-                        <p class="text-[10px] sm:text-[11px] text-muted-foreground truncate font-mono">ID: {certId}</p>
+                        <p class="text-[10px] sm:text-[11px] text-muted-foreground truncate">ID: {certId}</p>
                     </div>
                 </div>
 
@@ -229,11 +229,11 @@
                                 <span class="text-[7px] sm:text-[8px] font-extrabold uppercase tracking-tight text-[#593e06] mt-0.5">
                                     TERAKREDITASI
                                 </span>
-                                <span class="text-[6px] text-slate-600 font-mono">
+                                <span class="text-[6px] text-slate-600">
                                     EDUJA VERIFIED
                                 </span>
                             </div>
-                            <div class="text-[8px] sm:text-[9px] text-slate-500 font-mono mt-1">
+                            <div class="text-[8px] sm:text-[9px] text-slate-500 mt-1">
                                 {certId}
                             </div>
                         </div>
@@ -257,7 +257,7 @@
                     </div>
 
                     <!-- Bottom Bar: Issue Date -->
-                    <div class="relative z-10 pt-2 flex items-center justify-between text-[8px] sm:text-[10px] text-slate-400 font-mono">
+                    <div class="relative z-10 pt-2 flex items-center justify-between text-[8px] sm:text-[10px] text-slate-400">
                         <span>Tanggal Penerbitan: {issueDate}</span>
                         <span>Diverifikasi Secara Digital oleh Eduja Learning Media LMS</span>
                     </div>
