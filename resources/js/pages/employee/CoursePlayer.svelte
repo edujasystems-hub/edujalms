@@ -62,6 +62,7 @@
         description?: string;
         sort_order: number;
         duration_minutes: number;
+        points?: number;
         content_type: string;
         is_completed: boolean;
         is_preview?: boolean;
@@ -279,6 +280,15 @@
 
         <!-- Course Progress & Action Pill -->
         <div class="flex items-center gap-3 bg-card border border-border/80 px-4 py-2.5 rounded-xl shadow-xs shrink-0">
+            {#if user?.total_points !== undefined}
+                <div class="pr-3 border-r border-border/80 hidden sm:flex flex-col items-end">
+                    <span class="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Skor & Level</span>
+                    <span class="text-xs font-bold text-amber-500 flex items-center gap-1">
+                        <span>{user.badge ?? user.gamification_tier?.badge ?? '🥉'}</span>
+                        <span>{user.total_points} XP</span>
+                    </span>
+                </div>
+            {/if}
             <div class="space-y-1 min-w-[120px]">
                 <div class="flex justify-between text-xs">
                     <span class="font-medium text-muted-foreground">Progress Kelas</span>
@@ -311,7 +321,7 @@
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-emerald-600 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors shrink-0 disabled:opacity-50"
                 >
                     <CheckCircle2 class="size-3.5" />
-                    <span>{isCompletingCourse ? 'Menyimpan...' : 'Tandai Selesai'}</span>
+                    <span>{isCompletingCourse ? 'Menyimpan...' : 'Tandai Selesai Kelas'}</span>
                 </button>
             {/if}
         </div>
@@ -328,9 +338,12 @@
                     <h3 class="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                         <span>Selamat! Kelas Telah Berhasil Diselesaikan</span>
                         <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">100% Selesai</span>
+                        {#if course.points}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400">+{course.points} XP Bonus</span>
+                        {/if}
                     </h3>
                     <p class="text-xs text-muted-foreground mt-0.5">
-                        Anda telah menyelesaikan seluruh modul pelatihan. Sertifikat resmi Anda telah diterbitkan dan siap diunduh/dicetak.
+                        Anda telah menyelesaikan seluruh modul pelatihan. Sertifikat resmi Anda telah diterbitkan dan skor XP Anda telah bertambah!
                     </p>
                 </div>
             </div>
@@ -807,7 +820,7 @@
                             <span>Tandai Belum Selesai</span>
                         {:else}
                             <CheckCircle2 class="size-4.5" />
-                            <span>{isSubmitting ? 'Menyimpan...' : 'Tandai Selesai & Tingkatkan Skor'}</span>
+                            <span>{isSubmitting ? 'Menyimpan...' : `Tandai Selesai (+${activeLesson.points ?? 50} XP)`}</span>
                         {/if}
                     </button>
 
@@ -886,6 +899,7 @@
                                 </div>
                                 <div class="text-[10px] text-muted-foreground mt-1 flex flex-wrap items-center gap-1.5">
                                     <span>⏱️ {lesson.duration_minutes} mnt</span>
+                                    <span class="px-1 py-0.2 rounded font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400">+{lesson.points ?? 50} XP</span>
                                     {#if lesson.has_pre_test}
                                         <span class="px-1 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Pre</span>
                                     {/if}

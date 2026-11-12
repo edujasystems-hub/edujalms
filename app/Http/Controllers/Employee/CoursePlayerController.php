@@ -85,6 +85,7 @@ class CoursePlayerController extends Controller
                 'description' => $l->description,
                 'sort_order' => $l->sort_order,
                 'duration_minutes' => $l->duration_minutes,
+                'points' => (int) ($l->points ?? 50),
                 'content_type' => $l->content_type,
                 'due_date' => $l->due_date ? $l->due_date->format('Y-m-d') : null,
                 'has_pre_test' => ! empty($l->pre_test),
@@ -119,6 +120,7 @@ class CoursePlayerController extends Controller
                 'description' => $course->description,
                 'level' => $course->level,
                 'estimated_duration_hours' => $course->estimated_duration_hours,
+                'points' => (int) ($course->points ?? 200),
                 'due_date' => $course->due_date ? $course->due_date->format('Y-m-d') : null,
                 'tutor' => $course->tutor,
                 'class_group' => $course->classGroup,
@@ -135,6 +137,9 @@ class CoursePlayerController extends Controller
                 'email' => $user->email,
                 'job_title' => $user->job_title ?? $user->position,
                 'department' => $user->department,
+                'total_points' => (int) ($user->total_points ?? 0),
+                'gamification_tier' => $user->gamification_tier,
+                'badge' => $user->badge ?? $user->gamification_tier['badge'],
                 'company' => $user->company ? ['name' => $user->company->name] : null,
             ],
             'lessons' => $lessonsFormatted,
@@ -145,6 +150,7 @@ class CoursePlayerController extends Controller
                 'description' => $activeLesson->description,
                 'sort_order' => $activeLesson->sort_order,
                 'duration_minutes' => $activeLesson->duration_minutes,
+                'points' => (int) ($activeLesson->points ?? 50),
                 'content_type' => $activeLesson->content_type,
                 'due_date' => $activeLesson->due_date ? $activeLesson->due_date->format('Y-m-d') : null,
                 'pre_test' => $activeLesson->pre_test,
@@ -172,27 +178,43 @@ class CoursePlayerController extends Controller
             ->where('lesson_id', $lesson->id)
             ->first();
 
+        $lessonPoints = (int) ($lesson->points ?? 50);
         $newCompletedStatus = true;
+        $earnedDelta = 0;
+
         if ($existing) {
             $newCompletedStatus = ! $existing->is_completed;
+            $pointsEarned = $newCompletedStatus ? $lessonPoints : 0;
+            $earnedDelta = $newCompletedStatus ? ($lessonPoints - ($existing->points_earned ?? 0)) : - ($existing->points_earned ?? 0);
+
             DB::table('lesson_user')
                 ->where('id', $existing->id)
                 ->update([
                     'is_completed' => $newCompletedStatus,
+                    'points_earned' => $pointsEarned,
                     'completed_at' => $newCompletedStatus ? now() : null,
                     'updated_at' => now(),
                 ]);
         } else {
+            $earnedDelta = $lessonPoints;
             DB::table('lesson_user')->insert([
                 'user_id' => $user->id,
                 'lesson_id' => $lesson->id,
                 'course_id' => $course->id,
                 'is_completed' => true,
+                'points_earned' => $lessonPoints,
                 'completed_at' => now(),
                 'last_watched_seconds' => $lesson->duration_minutes * 60,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+        }
+
+        // Adjust user total_points
+        if ($earnedDelta > 0) {
+            $user->increment('total_points', $earnedDelta);
+        } elseif ($earnedDelta < 0) {
+            $user->decrement('total_points', min((int) ($user->total_points ?? 0), abs($earnedDelta)));
         }
 
         // Recalculate progress for the course
@@ -206,13 +228,30 @@ class CoursePlayerController extends Controller
         $progressPercent = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
         $status = $progressPercent >= 100 ? 'completed' : ($progressPercent > 0 ? 'in_progress' : 'enrolled');
 
+        $courseEnrollment = DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        $courseBonus = (int) ($course->points ?? 200);
+        $coursePointsEarned = $courseEnrollment ? ($courseEnrollment->points_earned ?? 0) : 0;
+
+        if ($status === 'completed' && $coursePointsEarned === 0) {
+            $user->increment('total_points', $courseBonus);
+            $coursePointsEarned = $courseBonus;
+        } elseif ($status !== 'completed' && $coursePointsEarned > 0) {
+            $user->decrement('total_points', min((int) ($user->total_points ?? 0), $coursePointsEarned));
+            $coursePointsEarned = 0;
+        }
+
         DB::table('course_user')
             ->where('user_id', $user->id)
             ->where('course_id', $course->id)
             ->update([
                 'progress_percent' => $progressPercent,
                 'status' => $status,
-                'completed_at' => $status === 'completed' ? now() : null,
+                'points_earned' => $coursePointsEarned,
+                'completed_at' => $status === 'completed' ? ($courseEnrollment->completed_at ?? now()) : null,
                 'last_accessed_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -237,7 +276,7 @@ class CoursePlayerController extends Controller
         }
 
         $msg = $newCompletedStatus
-            ? "Pelajaran '{$lesson->title}' berhasil diselesaikan! Progress kelas: {$progressPercent}%."
+            ? "Pelajaran '{$lesson->title}' diselesaikan! (+{$lessonPoints} XP). Progress: {$progressPercent}%."
             : "Status pelajaran diubah menjadi belum selesai.";
 
         return back()->with('success', $msg);
@@ -251,18 +290,56 @@ class CoursePlayerController extends Controller
             abort(403);
         }
 
-        // Mark all lessons completed
+        $totalAddedPoints = 0;
+
+        // Mark all lessons completed & calculate missing lesson XP
         foreach ($course->lessons as $lesson) {
-            DB::table('lesson_user')->updateOrInsert(
-                ['user_id' => $user->id, 'lesson_id' => $lesson->id],
-                [
+            $existing = DB::table('lesson_user')
+                ->where('user_id', $user->id)
+                ->where('lesson_id', $lesson->id)
+                ->first();
+
+            $lessonPoints = (int) ($lesson->points ?? 50);
+
+            if (! $existing) {
+                DB::table('lesson_user')->insert([
+                    'user_id' => $user->id,
+                    'lesson_id' => $lesson->id,
                     'course_id' => $course->id,
                     'is_completed' => true,
+                    'points_earned' => $lessonPoints,
                     'completed_at' => now(),
                     'last_watched_seconds' => $lesson->duration_minutes * 60,
+                    'created_at' => now(),
                     'updated_at' => now(),
-                ]
-            );
+                ]);
+                $totalAddedPoints += $lessonPoints;
+            } elseif (! $existing->is_completed) {
+                $missingPoints = max(0, $lessonPoints - ($existing->points_earned ?? 0));
+                DB::table('lesson_user')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'is_completed' => true,
+                        'points_earned' => $lessonPoints,
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                $totalAddedPoints += $missingPoints;
+            }
+        }
+
+        // Award course completion bonus points if not yet awarded
+        $courseEnrollment = DB::table('course_user')
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        $courseBonus = (int) ($course->points ?? 200);
+        $coursePointsEarned = $courseEnrollment ? ($courseEnrollment->points_earned ?? 0) : 0;
+
+        if ($coursePointsEarned === 0) {
+            $totalAddedPoints += $courseBonus;
+            $coursePointsEarned = $courseBonus;
         }
 
         // Mark course completed in course_user
@@ -271,11 +348,16 @@ class CoursePlayerController extends Controller
             [
                 'progress_percent' => 100,
                 'status' => 'completed',
+                'points_earned' => $coursePointsEarned,
                 'completed_at' => now(),
                 'last_accessed_at' => now(),
                 'updated_at' => now(),
             ]
         );
+
+        if ($totalAddedPoints > 0) {
+            $user->increment('total_points', $totalAddedPoints);
+        }
 
         // Competency score boost
         if ($course->competency_impact) {
@@ -296,6 +378,6 @@ class CoursePlayerController extends Controller
             $user->save();
         }
 
-        return back()->with('success', "Selamat! Anda telah menandai kelas '{$course->title}' selesai dan berhak atas Sertifikat Kelulusan Resmi.");
+        return back()->with('success', "Selamat! Anda telah menandai kelas '{$course->title}' selesai, mendapatkan +{$totalAddedPoints} XP dan Sertifikat Kelulusan Resmi.");
     }
 }

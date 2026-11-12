@@ -26,6 +26,7 @@ class Course extends Model
         'competency_impact',
         'status',
         'due_date',
+        'points',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class Course extends Model
             'competency_impact' => 'array',
             'estimated_duration_hours' => 'float',
             'due_date' => 'date',
+            'points' => 'integer',
         ];
     }
 

@@ -162,3 +162,49 @@ test('employee can mark course complete and receive certificate data', function 
         ->has('course.completed_at')
     );
 });
+
+test('employee earns points when completing lesson and course', function () {
+    $employee = User::where('role', 'employee')->first();
+    $initialPoints = (int) ($employee->total_points ?? 0);
+
+    $course = Course::with('lessons')->first();
+    $lesson = $course->lessons->first();
+
+    // Toggle lesson
+    $this->actingAs($employee)->post("/learn/{$course->id}/lessons/{$lesson->id}/toggle");
+    $employee->refresh();
+
+    expect($employee->total_points)->toBeGreaterThanOrEqual($initialPoints);
+
+    // Complete course
+    $this->actingAs($employee)->post("/learn/{$course->id}/complete");
+    $employee->refresh();
+
+    expect($employee->total_points)->toBeGreaterThan($initialPoints);
+    expect($employee->gamification_tier)->toBeArray();
+    expect($employee->gamification_tier['name'])->not->toBeEmpty();
+});
+
+test('employee and admin can view leaderboard', function () {
+    $employee = User::where('role', 'employee')->first();
+    $admin = User::where('role', 'admin')->first();
+
+    $employeeResponse = $this->actingAs($employee)->get('/leaderboard');
+    $employeeResponse->assertOk();
+    $employeeResponse->assertInertia(fn ($page) => $page
+        ->component('Leaderboard')
+        ->where('isAdmin', false)
+        ->has('leaderboard')
+        ->has('podium')
+    );
+
+    $adminResponse = $this->actingAs($admin)->get('/admin/leaderboard');
+    $adminResponse->assertOk();
+    $adminResponse->assertInertia(fn ($page) => $page
+        ->component('Leaderboard')
+        ->where('isAdmin', true)
+        ->has('companies')
+        ->has('leaderboard')
+    );
+});
+

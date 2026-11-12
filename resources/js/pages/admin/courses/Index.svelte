@@ -63,6 +63,7 @@
         company_id: '',
         level: 'all_levels',
         estimated_duration_hours: 2.5,
+        points: 200,
         thumbnail_url: '',
         status: 'published',
         due_date: '',
@@ -85,6 +86,7 @@
                     company_id: '',
                     level: 'all_levels',
                     estimated_duration_hours: 2.5,
+                    points: 200,
                     thumbnail_url: '',
                     status: 'published',
                     due_date: '',
@@ -313,7 +315,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                         <label class="block font-semibold text-foreground mb-1">Tingkat</label>
                         <select
@@ -328,6 +330,15 @@
                     </div>
 
                     <div>
+                        <label class="block font-semibold text-foreground mb-1">Tenggat Waktu / Due Date</label>
+                        <input
+                            type="date"
+                            bind:value={newCourseForm.due_date}
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                        />
+                    </div>
+
+                    <div>
                         <label class="block font-semibold text-foreground mb-1">Estimasi Durasi (Jam)</label>
                         <input
                             type="number"
@@ -339,11 +350,14 @@
                     </div>
 
                     <div>
-                        <label class="block font-semibold text-foreground mb-1">Tenggat Waktu / Due Date</label>
+                        <label class="block font-semibold text-foreground mb-1">Bonus Skor Kelulusan (XP)</label>
                         <input
-                            type="date"
-                            bind:value={newCourseForm.due_date}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            type="number"
+                            min="0"
+                            step="10"
+                            bind:value={newCourseForm.points}
+                            placeholder="200"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
                 </div>

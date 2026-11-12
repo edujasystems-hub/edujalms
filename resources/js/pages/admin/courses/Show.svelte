@@ -72,6 +72,7 @@
         title: '',
         description: '',
         duration_minutes: 15,
+        points: 50,
         content_type: 'video',
         video_url: '',
         audio_url: '',
@@ -151,6 +152,7 @@
             title: '',
             description: '',
             duration_minutes: 15,
+            points: 50,
             content_type: 'video',
             video_url: '',
             audio_url: '',
@@ -188,6 +190,7 @@
             title: les.title,
             description: les.description || '',
             duration_minutes: les.duration_minutes || 15,
+            points: les.points ?? 50,
             content_type: les.content_type || 'video',
             video_url: les.video_url || '',
             audio_url: les.audio_url || '',
@@ -227,6 +230,7 @@
             title: lessonForm.title,
             description: lessonForm.description,
             duration_minutes: lessonForm.duration_minutes,
+            points: lessonForm.points,
             content_type: lessonForm.content_type,
             video_url: lessonForm.video_url || null,
             audio_url: lessonForm.audio_url || null,
@@ -312,6 +316,7 @@
         company_id: course.company_id || '',
         level: course.level || 'all_levels',
         estimated_duration_hours: course.estimated_duration_hours || 2.5,
+        points: course.points ?? 200,
         thumbnail_url: course.thumbnail_url || '',
         status: course.status || 'published',
         due_date: course.due_date ? String(course.due_date).substring(0, 10) : '',
@@ -583,7 +588,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     <div>
                         <label class="block font-semibold text-foreground mb-1">Tipe Media *</label>
                         <select
@@ -604,6 +609,18 @@
                             type="number"
                             min="1"
                             bind:value={lessonForm.duration_minutes}
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
+                        />
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-foreground mb-1">Poin / XP</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="5"
+                            bind:value={lessonForm.points}
+                            placeholder="50"
                             class="w-full px-3 py-2 rounded-xl border border-border bg-card focus:outline-hidden"
                         />
                     </div>
@@ -904,7 +921,7 @@
                     />
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                         <label class="block font-semibold text-foreground mb-1">Status</label>
                         <select
@@ -914,6 +931,18 @@
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>
                         </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-foreground mb-1">Bonus Kelulusan (XP)</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="10"
+                            bind:value={courseEditForm.points}
+                            placeholder="200"
+                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground"
+                        />
                     </div>
 
                     <div>

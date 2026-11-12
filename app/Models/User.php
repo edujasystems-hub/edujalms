@@ -30,6 +30,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         'avatar',
         'phone',
         'competency_scores',
+        'total_points',
+        'badge',
     ];
 
     protected $hidden = [
@@ -46,6 +48,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'competency_scores' => 'array',
+            'total_points' => 'integer',
         ];
     }
 
@@ -163,5 +166,71 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         }
 
         return $result;
+    }
+
+    /**
+     * Get gamification rank, badge and tier progress
+     */
+    public function getGamificationTierAttribute(): array
+    {
+        $points = $this->total_points ?? 0;
+
+        if ($points >= 2000) {
+            return [
+                'level' => 5,
+                'name' => 'Eduja Mastermind',
+                'badge' => '👑',
+                'color' => 'amber',
+                'min_points' => 2000,
+                'next_points' => null,
+                'progress_percent' => 100,
+            ];
+        }
+
+        if ($points >= 1000) {
+            return [
+                'level' => 4,
+                'name' => 'Expert Specialist',
+                'badge' => '💎',
+                'color' => 'purple',
+                'min_points' => 1000,
+                'next_points' => 2000,
+                'progress_percent' => round((($points - 1000) / 1000) * 100),
+            ];
+        }
+
+        if ($points >= 500) {
+            return [
+                'level' => 3,
+                'name' => 'Pro Practitioner',
+                'badge' => '🥇',
+                'color' => 'indigo',
+                'min_points' => 500,
+                'next_points' => 1000,
+                'progress_percent' => round((($points - 500) / 500) * 100),
+            ];
+        }
+
+        if ($points >= 200) {
+            return [
+                'level' => 2,
+                'name' => 'Rising Apprentice',
+                'badge' => '🥈',
+                'color' => 'blue',
+                'min_points' => 200,
+                'next_points' => 500,
+                'progress_percent' => round((($points - 200) / 300) * 100),
+            ];
+        }
+
+        return [
+            'level' => 1,
+            'name' => 'Novice Learner',
+            'badge' => '🥉',
+            'color' => 'slate',
+            'min_points' => 0,
+            'next_points' => 200,
+            'progress_percent' => round(($points / 200) * 100),
+        ];
     }
 }

@@ -6,6 +6,7 @@
     import GraduationCap from '@lucide/svelte/icons/graduation-cap';
     import Layers from '@lucide/svelte/icons/layers';
     import LayoutGrid from '@lucide/svelte/icons/layout-grid';
+    import Trophy from '@lucide/svelte/icons/trophy';
     import Users from '@lucide/svelte/icons/users';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
@@ -67,6 +68,11 @@
             href: '/admin/employees',
             icon: Users,
         },
+        {
+            title: 'Klasemen',
+            href: '/admin/leaderboard',
+            icon: Trophy,
+        },
     ];
 
     const employeeNavItems: NavItem[] = [
@@ -79,6 +85,11 @@
             title: 'Kelas Saya',
             href: '/my-courses',
             icon: BookOpen,
+        },
+        {
+            title: 'Klasemen',
+            href: '/leaderboard',
+            icon: Trophy,
         },
     ];
 </script>

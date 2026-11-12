@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Employee\CourseCatalogController;
 use App\Http\Controllers\Employee\CoursePlayerController;
 use App\Http\Controllers\Employee\SummaryController;
+use App\Http\Controllers\LeaderboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -26,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employee Routes
     Route::get('/my-summary', [SummaryController::class, 'index'])->name('employee.summary');
     Route::get('/my-courses', [CourseCatalogController::class, 'index'])->name('employee.courses');
+    Route::get('/leaderboard', [LeaderboardController::class, 'employeeIndex'])->name('employee.leaderboard');
     Route::get('/learn/{slug}', [CoursePlayerController::class, 'show'])->name('employee.learn.show');
     Route::post('/learn/{course}/lessons/{lesson}/toggle', [CoursePlayerController::class, 'toggleLessonComplete'])
         ->name('employee.learn.toggle');
@@ -36,6 +38,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         // Admin Dashboard
         Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
+        Route::get('/leaderboard', [LeaderboardController::class, 'adminIndex'])->name('leaderboard');
 
         // Course Management (Pengelolaan Kelas)
         Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');

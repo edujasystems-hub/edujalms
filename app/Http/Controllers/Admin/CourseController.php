@@ -99,6 +99,7 @@ class CourseController extends Controller
             'thumbnail_url' => 'nullable|url',
             'status' => 'required|in:draft,published,archived',
             'due_date' => 'nullable|date',
+            'points' => 'nullable|integer|min:0',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::random(4);
@@ -122,6 +123,7 @@ class CourseController extends Controller
             'thumbnail_url' => 'nullable|url',
             'status' => 'required|in:draft,published,archived',
             'due_date' => 'nullable|date',
+            'points' => 'nullable|integer|min:0',
         ]);
 
         $course->update($validated);

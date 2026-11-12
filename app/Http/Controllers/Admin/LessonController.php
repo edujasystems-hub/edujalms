@@ -26,6 +26,7 @@ class LessonController extends Controller
             'due_date' => 'nullable|date',
             'pre_test' => 'nullable|array',
             'post_test' => 'nullable|array',
+            'points' => 'nullable|integer|min:0',
         ]);
 
         $validated['course_id'] = $course->id;
@@ -56,6 +57,7 @@ class LessonController extends Controller
             'due_date' => 'nullable|date',
             'pre_test' => 'nullable|array',
             'post_test' => 'nullable|array',
+            'points' => 'nullable|integer|min:0',
         ]);
 
         $lesson->update($validated);

@@ -28,6 +28,7 @@ class Lesson extends Model
         'due_date',
         'pre_test',
         'post_test',
+        'points',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Lesson extends Model
             'due_date' => 'date',
             'pre_test' => 'array',
             'post_test' => 'array',
+            'points' => 'integer',
         ];
     }
 
