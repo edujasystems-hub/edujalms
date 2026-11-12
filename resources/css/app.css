@@ -160,3 +160,11 @@
         padding-right: 2.25rem;
     }
 }
+
+@utility no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+}

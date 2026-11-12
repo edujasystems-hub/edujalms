@@ -72,11 +72,11 @@
 
     <!-- Assigned Groups Filter Bar -->
     {#if assignedGroups.length > 0}
-        <div class="flex flex-wrap gap-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1.5 sm:flex-wrap no-scrollbar">
             <button
                 type="button"
                 onclick={() => (selectedGroupId = null)}
-                class="px-3 py-1 rounded-full text-xs font-semibold transition-all {selectedGroupId === null ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
+                class="px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all {selectedGroupId === null ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
             >
                 Semua ({courses.length})
             </button>
@@ -84,7 +84,7 @@
                 <button
                     type="button"
                     onclick={() => (selectedGroupId = group.id)}
-                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all {selectedGroupId === group.id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all {selectedGroupId === group.id ? 'bg-indigo-600 text-white shadow-xs' : 'bg-card border border-border text-foreground hover:bg-muted'}"
                 >
                     <Layers class="size-3.5" />
                     <span>{group.name}</span>

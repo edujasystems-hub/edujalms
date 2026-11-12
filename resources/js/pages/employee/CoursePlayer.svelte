@@ -102,6 +102,7 @@
 
     let isCertificateOpen = $state(false);
     let isCompletingCourse = $state(false);
+    let isCurriculumSheetOpen = $state(false);
 
     function completeEntireCourse() {
         if (!confirm(`Tandai seluruh kelas '${course.title}' sebagai selesai dan buka Sertifikat Kelulusan Resmi?`)) {
@@ -349,6 +350,27 @@
             </button>
         </div>
     {/if}
+
+    <!-- Mobile Curriculum Quick Trigger (lg:hidden) -->
+    <div class="lg:hidden flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
+        <div class="flex items-center gap-2.5 min-w-0 pr-2">
+            <div class="size-8 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                <BookOpen class="size-4" />
+            </div>
+            <div class="min-w-0">
+                <div class="text-[10px] uppercase font-bold text-muted-foreground">Pelajaran Aktif</div>
+                <div class="text-xs font-bold text-foreground truncate">#{activeLesson?.sort_order ?? 1}. {activeLesson?.title ?? ''}</div>
+            </div>
+        </div>
+        <button
+            type="button"
+            onclick={() => (isCurriculumSheetOpen = true)}
+            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
+        >
+            <ClipboardCheck class="size-3.5" />
+            <span>Modul ({course.completed_lessons}/{course.total_lessons})</span>
+        </button>
+    </div>
 
     <!-- Main Layout: Content Player (Left) + Curriculum Sidebar (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -920,3 +942,95 @@
     certificateCode={course.certificate_code}
     onClose={() => (isCertificateOpen = false)}
 />
+
+<!-- Mobile Curriculum Bottom Sheet -->
+{#if isCurriculumSheetOpen}
+    <div class="fixed inset-0 z-50 flex items-end justify-center p-0 lg:hidden">
+        <button
+            type="button"
+            class="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity cursor-default"
+            aria-label="Tutup"
+            onclick={() => (isCurriculumSheetOpen = false)}
+        ></button>
+        <div class="relative z-10 w-full max-h-[85vh] bg-card border border-b-0 border-border rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <!-- Mobile Bottom Sheet Grab Handle -->
+            <div class="flex justify-center pt-2.5 pb-1 shrink-0">
+                <div class="h-1.5 w-12 rounded-full bg-muted-foreground/30"></div>
+            </div>
+
+            <!-- Sheet Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-border/80 shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="size-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <BookOpen class="size-4" />
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-foreground">Daftar Pelajaran & Modul</h3>
+                        <p class="text-[11px] text-muted-foreground">{course.completed_lessons} dari {course.total_lessons} selesai</p>
+                    </div>
+                </div>
+                <button
+                    type="button"
+                    onclick={() => (isCurriculumSheetOpen = false)}
+                    class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    aria-label="Tutup"
+                >
+                    <X class="size-4.5" />
+                </button>
+            </div>
+
+            <!-- Lessons List in Bottom Sheet -->
+            <div class="p-3 space-y-2 overflow-y-auto max-h-[calc(85vh-120px)]">
+                {#each lessons as lesson (lesson.id)}
+                    {@const isActive = lesson.id === activeLesson?.id}
+                    <Link
+                        href="/learn/{course.slug}?lesson={lesson.slug}"
+                        onclick={() => (isCurriculumSheetOpen = false)}
+                        class="flex items-start gap-3 p-3 rounded-xl border text-xs transition-all {isActive ? 'bg-indigo-50/80 dark:bg-indigo-950/60 border-indigo-400 text-foreground font-semibold shadow-xs' : 'border-border/60 hover:bg-muted/60 text-muted-foreground'}"
+                    >
+                        <!-- Completion Icon -->
+                        <div class="shrink-0 mt-0.5">
+                            {#if lesson.is_completed}
+                                <CheckCircle2 class="size-4.5 text-emerald-500 fill-emerald-100 dark:fill-emerald-950" />
+                            {:else if isActive}
+                                <div class="size-4.5 rounded-full border-2 border-indigo-600 flex items-center justify-center">
+                                    <div class="size-2 rounded-full bg-indigo-600"></div>
+                                </div>
+                            {:else}
+                                <Circle class="size-4.5 text-muted-foreground/40" />
+                            {/if}
+                        </div>
+
+                        <!-- Lesson Info -->
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <span class="text-[10px] font-mono text-muted-foreground">
+                                    Modul #{lesson.sort_order}
+                                </span>
+                                <span class="text-[10px] uppercase font-medium px-1.5 py-0.2 rounded bg-muted/80 text-muted-foreground">
+                                    {lesson.content_type}
+                                </span>
+                            </div>
+                            <div class="line-clamp-2 {isActive ? 'text-indigo-950 dark:text-indigo-200' : 'text-foreground/90'}">
+                                {lesson.title}
+                            </div>
+                            <div class="text-[10px] text-muted-foreground mt-1 flex flex-wrap items-center gap-1.5">
+                                <span>⏱️ {lesson.duration_minutes} mnt</span>
+                                <span class="px-1 py-0.2 rounded font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400">+{lesson.points ?? 50} XP</span>
+                                {#if lesson.has_pre_test}
+                                    <span class="px-1 py-0.2 rounded font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Pre</span>
+                                {/if}
+                                {#if lesson.has_post_test}
+                                    <span class="px-1 py-0.2 rounded font-semibold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">Post</span>
+                                {/if}
+                                {#if lesson.is_completed}
+                                    <span class="text-emerald-600 font-medium">✓ Selesai</span>
+                                {/if}
+                            </div>
+                        </div>
+                    </Link>
+                {/each}
+            </div>
+        </div>
+    </div>
+{/if}

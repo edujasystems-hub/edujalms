@@ -70,34 +70,49 @@
 </script>
 
 {#if isOpen && course && user}
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/75 backdrop-blur-xs certificate-backdrop">
-        <!-- Dialog Container -->
-        <div class="relative w-full max-w-4xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[95vh] certificate-modal-box">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-hidden bg-black/75 backdrop-blur-xs certificate-backdrop">
+        <!-- Backdrop dismiss click -->
+        <button
+            type="button"
+            class="fixed inset-0 bg-transparent print:hidden cursor-default"
+            aria-label="Tutup"
+            onclick={onClose}
+        ></button>
+
+        <!-- Bottom Sheet / Dialog Container -->
+        <div class="relative z-10 w-full max-w-4xl bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[95vh] certificate-modal-box animate-in slide-in-from-bottom duration-300 sm:slide-in-from-bottom-0 sm:zoom-in-95 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-0">
+            <!-- Mobile Bottom Sheet Drag Handle -->
+            <div class="flex sm:hidden justify-center pt-2.5 pb-1 bg-muted/40 print:hidden shrink-0">
+                <div class="h-1.5 w-12 rounded-full bg-muted-foreground/30"></div>
+            </div>
+
             <!-- Header Toolbar (Hidden when printing) -->
-            <div class="flex items-center justify-between px-5 py-3.5 bg-muted/40 border-b border-border/80 print:hidden shrink-0">
-                <div class="flex items-center gap-2">
-                    <div class="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
+            <div class="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 bg-muted/40 border-b border-border/80 print:hidden shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
                         <Award class="size-4.5" />
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-foreground">Sertifikat Kelulusan Resmi</h3>
-                        <p class="text-[11px] text-muted-foreground">ID: {certId}</p>
+                    <div class="min-w-0">
+                        <h3 class="text-sm font-bold text-foreground truncate">Sertifikat Kelulusan</h3>
+                        <p class="text-[10px] sm:text-[11px] text-muted-foreground truncate font-mono">ID: {certId}</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 shrink-0">
                     <button
                         type="button"
                         onclick={handlePrint}
-                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors"
+                        class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors"
                     >
                         <Printer class="size-3.5" />
-                        <span>Cetak / Simpan PDF</span>
+                        <span class="hidden sm:inline">Cetak / Simpan PDF</span>
+                        <span class="sm:hidden">Cetak</span>
                     </button>
                     <button
                         type="button"
                         onclick={onClose}
                         class="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                        aria-label="Tutup"
                     >
                         <X class="size-4.5" />
                     </button>
@@ -105,7 +120,7 @@
             </div>
 
             <!-- Scrollable Certificate Canvas Container -->
-            <div class="p-4 sm:p-8 overflow-y-auto bg-slate-900/30 flex justify-center items-center">
+            <div class="p-3 sm:p-8 overflow-y-auto overflow-x-auto bg-slate-900/30 flex justify-center items-start sm:items-center">
                 <!-- PRINT TARGET CONTAINER -->
                 <div
                     id="certificate-print-area"
