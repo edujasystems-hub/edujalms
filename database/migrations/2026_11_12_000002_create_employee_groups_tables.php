@@ -32,7 +32,7 @@ return new class extends Migration
             $table->timestamp('assigned_at')->useCurrent();
             $table->timestamps();
 
-            $table->unique(['employee_group_id', 'user_id']);
+            $table->unique(['employee_group_id', 'user_id'], 'employee_group_user_unique');
         });
 
         // 3. Class Group to Employee Group assignment (Class Group <-> Employee Group)
@@ -44,7 +44,7 @@ return new class extends Migration
             $table->timestamp('assigned_at')->useCurrent();
             $table->timestamps();
 
-            $table->unique(['class_group_id', 'employee_group_id']);
+            $table->unique(['class_group_id', 'employee_group_id'], 'class_group_employee_group_unique');
         });
     }
 
