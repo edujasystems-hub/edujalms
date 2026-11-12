@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import SpiderChart from '@/components/SpiderChart.svelte';
     import CertificateModal from '@/components/CertificateModal.svelte';
     import Award from '@lucide/svelte/icons/award';
@@ -116,6 +117,13 @@
     <!-- Minimalist Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Portal Karyawan', href: '/my-summary' },
+                    { title: 'My Summary', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
                 Halo, {employee?.name || 'Karyawan'} 👋
             </h1>

@@ -20,6 +20,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import DataTable, { type Column } from '@/components/DataTable.svelte';
     import UsersRound from '@lucide/svelte/icons/users-round';
     import Users from '@lucide/svelte/icons/users';
@@ -230,10 +231,14 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">
-                <UsersRound class="size-4" />
-                <span>Pengelompokan Tim & Departemen</span>
-            </div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Karyawan', href: '/admin/employees' },
+                    { title: 'Group Karyawan', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
                 Group Karyawan
             </h1>

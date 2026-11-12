@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import RichTextEditor from '@/components/RichTextEditor.svelte';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import Users from '@lucide/svelte/icons/users';
@@ -26,7 +27,6 @@
     import Headphones from '@lucide/svelte/icons/headphones';
     import FileText from '@lucide/svelte/icons/file-text';
     import Paperclip from '@lucide/svelte/icons/paperclip';
-    import ArrowLeft from '@lucide/svelte/icons/arrow-left';
     import UserPlus from '@lucide/svelte/icons/user-plus';
     import Mail from '@lucide/svelte/icons/mail';
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -341,13 +341,14 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div class="space-y-1">
-            <Link
-                href="/admin/courses"
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
-            >
-                <ArrowLeft class="size-3.5" />
-                <span>Kembali ke Kelas</span>
-            </Link>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Kelas', href: '/admin/courses' },
+                    { title: course.title, href: '#' },
+                ]}
+                class="mb-2"
+            />
             <div class="flex flex-wrap items-center gap-2 pt-1">
                 <h1 class="text-xl font-bold text-foreground tracking-tight">
                     {course.title}

@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import GraduationCap from '@lucide/svelte/icons/graduation-cap';
     import Plus from '@lucide/svelte/icons/plus';
     import Search from '@lucide/svelte/icons/search';
@@ -112,6 +113,13 @@
     <!-- Header -->
     <div class="flex items-center justify-between gap-4">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Kelas', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
                 <GraduationCap class="size-5 text-indigo-600" />
                 <span>Kelas</span>

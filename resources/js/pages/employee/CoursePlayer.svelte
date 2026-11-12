@@ -20,6 +20,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import CertificateModal from '@/components/CertificateModal.svelte';
     import ArrowLeft from '@lucide/svelte/icons/arrow-left';
     import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -244,14 +245,14 @@
     <!-- Top Bar: Course Title, Progress, and Back -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div class="space-y-1">
-            <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                <Link href="/my-courses" class="hover:text-foreground inline-flex items-center gap-1 transition-colors">
-                    <ArrowLeft class="size-3.5" />
-                    <span>Semua Kelas</span>
-                </Link>
-                <span>/</span>
-                <span class="text-foreground font-medium truncate max-w-xs">{course.title}</span>
-            </div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Portal Karyawan', href: '/my-summary' },
+                    { title: 'Kelas Saya', href: '/my-courses' },
+                    { title: course.title, href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl md:text-2xl font-extrabold text-foreground tracking-tight">
                 {course.title}
             </h1>

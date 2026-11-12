@@ -16,6 +16,7 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import DataTable, { type Column } from '@/components/DataTable.svelte';
     import Layers from '@lucide/svelte/icons/layers';
     import Plus from '@lucide/svelte/icons/plus';
@@ -190,6 +191,13 @@
     <!-- Header -->
     <div class="flex items-center justify-between gap-4">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Kategori Kelas', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
                 <Layers class="size-5 text-indigo-600" />
                 <span>Kategori Kelas</span>

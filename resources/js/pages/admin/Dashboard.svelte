@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import Building2 from '@lucide/svelte/icons/building-2';
     import Users from '@lucide/svelte/icons/users';
     import GraduationCap from '@lucide/svelte/icons/graduation-cap';
@@ -65,6 +66,13 @@
     <!-- Header Admin -->
     <div class="flex items-center justify-between gap-4">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Dashboard', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl font-bold text-foreground tracking-tight">
                 Dashboard
             </h1>

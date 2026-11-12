@@ -12,6 +12,7 @@
 <script lang="ts">
     import { router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import Trophy from '@lucide/svelte/icons/trophy';
     import Medal from '@lucide/svelte/icons/medal';
     import Award from '@lucide/svelte/icons/award';
@@ -82,10 +83,13 @@
     <!-- Header with Office Context & Admin Switcher -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border/80">
         <div>
-            <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">
-                <Trophy class="size-4" />
-                <span>Leaderboard & Papan Skor</span>
-            </div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: isAdmin ? 'Admin' : 'Portal Karyawan', href: isAdmin ? '/admin/dashboard' : '/my-summary' },
+                    { title: 'Klasemen & Gamifikasi', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-2xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
                 <span>Klasemen Prestasi Karyawan</span>
             </h1>

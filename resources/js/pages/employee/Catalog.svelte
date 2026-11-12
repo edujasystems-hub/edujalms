@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import BookOpen from '@lucide/svelte/icons/book-open';
     import PlayCircle from '@lucide/svelte/icons/play-circle';
     import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
@@ -55,6 +56,13 @@
     <!-- Minimalist Header -->
     <div class="flex items-center justify-between gap-4">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Portal Karyawan', href: '/my-summary' },
+                    { title: 'Kelas Saya', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-xl font-bold text-foreground tracking-tight flex items-center gap-2">
                 <BookOpen class="size-5 text-indigo-600" />
                 <span>Kelas Saya</span>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Link } from '@inertiajs/svelte';
     import type { Snippet } from 'svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import Heading from '@/components/Heading.svelte';
     import { Button } from '@/components/ui/button';
     import { Separator } from '@/components/ui/separator';
@@ -36,6 +37,12 @@
 </script>
 
 <div class="px-4 py-6">
+    <Breadcrumbs
+        breadcrumbs={[
+            { title: 'Settings', href: '#' },
+        ]}
+        class="mb-3"
+    />
     <Heading
         title="Settings"
         description="Manage your profile and account settings"

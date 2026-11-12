@@ -16,6 +16,7 @@
 <script lang="ts">
     import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
+    import Breadcrumbs from '@/components/Breadcrumbs.svelte';
     import Users from '@lucide/svelte/icons/users';
     import UsersRound from '@lucide/svelte/icons/users-round';
     import Plus from '@lucide/svelte/icons/plus';
@@ -139,6 +140,13 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+            <Breadcrumbs
+                breadcrumbs={[
+                    { title: 'Admin', href: '/admin/dashboard' },
+                    { title: 'Karyawan', href: '#' },
+                ]}
+                class="mb-2"
+            />
             <h1 class="text-2xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
                 <Users class="size-6 text-indigo-600" />
                 <span>Pengelolaan Karyawan & Hak Akses</span>
