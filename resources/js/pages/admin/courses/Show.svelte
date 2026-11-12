@@ -593,7 +593,7 @@
                         <label class="block font-semibold text-foreground mb-1">Tipe Media *</label>
                         <select
                             bind:value={lessonForm.content_type}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                         >
                             <option value="video">Video (YouTube)</option>
                             <option value="audio">Audio / Podcast</option>
@@ -926,7 +926,7 @@
                         <label class="block font-semibold text-foreground mb-1">Status</label>
                         <select
                             bind:value={courseEditForm.status}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground"
                         >
                             <option value="draft">Draft</option>
                             <option value="published">Published</option>

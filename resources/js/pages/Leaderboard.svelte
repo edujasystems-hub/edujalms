@@ -114,7 +114,7 @@
                 <select
                     value={selectedCompanyId}
                     onchange={onCompanyChange}
-                    class="py-1.5 px-3 rounded-xl text-xs bg-muted/40 border border-border text-foreground font-medium focus:outline-hidden focus:border-indigo-500"
+                    class="py-1.5 pl-3 pr-8 rounded-xl text-xs bg-muted/40 border border-border text-foreground font-medium focus:outline-hidden focus:border-indigo-500"
                 >
                     <option value="all">🌐 Seluruh Kantor ({companies.length} Cabang)</option>
                     {#each companies as comp}
@@ -296,7 +296,7 @@
             <span class="text-xs text-muted-foreground font-medium hidden sm:inline">Tingkat Level:</span>
             <select
                 bind:value={selectedTierFilter}
-                class="py-1.5 px-3 rounded-xl text-xs bg-card border border-border text-foreground"
+                class="py-1.5 pl-3 pr-8 rounded-xl text-xs bg-card border border-border text-foreground"
             >
                 <option value="all">Semua Level</option>
                 <option value="5">👑 Level 5 - Mastermind</option>

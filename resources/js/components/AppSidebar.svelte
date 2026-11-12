@@ -8,7 +8,6 @@
     import LayoutGrid from '@lucide/svelte/icons/layout-grid';
     import Trophy from '@lucide/svelte/icons/trophy';
     import Users from '@lucide/svelte/icons/users';
-    import UsersRound from '@lucide/svelte/icons/users-round';
     import type { Snippet } from 'svelte';
     import AppLogo from '@/components/AppLogo.svelte';
     import NavMain from '@/components/NavMain.svelte';
@@ -68,11 +67,6 @@
             title: 'Karyawan',
             href: '/admin/employees',
             icon: Users,
-        },
-        {
-            title: 'Group Karyawan',
-            href: '/admin/employee-groups',
-            icon: UsersRound,
         },
         {
             title: 'Klasemen',

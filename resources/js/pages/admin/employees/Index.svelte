@@ -14,9 +14,10 @@
 </script>
 
 <script lang="ts">
-    import { router } from '@inertiajs/svelte';
+    import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import Users from '@lucide/svelte/icons/users';
+    import UsersRound from '@lucide/svelte/icons/users-round';
     import Plus from '@lucide/svelte/icons/plus';
     import Search from '@lucide/svelte/icons/search';
     import Building2 from '@lucide/svelte/icons/building-2';
@@ -146,14 +147,41 @@
                 Kelola data karyawan korporat, tentukan akses langsung ke kelas, atau masukkan ke dalam Group Track.
             </p>
         </div>
-        <button
-            type="button"
-            onclick={() => (isRegisterModalOpen = true)}
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+        <div class="flex items-center gap-2.5">
+            <Link
+                href="/admin/employee-groups"
+                class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold shadow-xs transition-colors shrink-0"
+            >
+                <UsersRound class="size-4 text-indigo-600" />
+                <span>Kelola Group Karyawan</span>
+            </Link>
+            <button
+                type="button"
+                onclick={() => (isRegisterModalOpen = true)}
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+            >
+                <Plus class="size-4" />
+                <span>Daftarkan Karyawan Baru</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sub-navigation Tabs: Karyawan vs Group Karyawan -->
+    <div class="flex items-center gap-2 border-b border-border/80 pb-1">
+        <Link
+            href="/admin/employees"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
         >
-            <Plus class="size-4" />
-            <span>Daftarkan Karyawan Baru</span>
-        </button>
+            <Users class="size-4" />
+            <span>Daftar Karyawan ({employees.length})</span>
+        </Link>
+        <Link
+            href="/admin/employee-groups"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-muted"
+        >
+            <UsersRound class="size-4" />
+            <span>Group Karyawan</span>
+        </Link>
     </div>
 
     <!-- Filters -->
@@ -172,7 +200,7 @@
         <select
             bind:value={companyId}
             onchange={applyFilter}
-            class="py-2 px-3 rounded-xl text-xs bg-muted/40 border border-border text-foreground"
+            class="py-2 pl-3 pr-8 rounded-xl text-xs bg-muted/40 border border-border text-foreground"
         >
             <option value="">Semua Perusahaan</option>
             {#each companies as comp}

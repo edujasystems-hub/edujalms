@@ -142,7 +142,7 @@
         <select
             bind:value={groupId}
             onchange={applyFilter}
-            class="py-1.5 px-3 rounded-xl text-xs bg-card border border-border text-foreground"
+            class="py-1.5 pl-3 pr-8 rounded-xl text-xs bg-card border border-border text-foreground"
         >
             <option value="">Semua Kategori</option>
             {#each classGroups as grp}
@@ -153,7 +153,7 @@
         <select
             bind:value={level}
             onchange={applyFilter}
-            class="py-1.5 px-3 rounded-xl text-xs bg-card border border-border text-foreground"
+            class="py-1.5 pl-3 pr-8 rounded-xl text-xs bg-card border border-border text-foreground"
         >
             <option value="">Semua Tingkat</option>
             <option value="beginner">Pemula</option>
@@ -292,7 +292,7 @@
                         <label class="block font-semibold text-foreground mb-1">Kategori Kelas</label>
                         <select
                             bind:value={newCourseForm.class_group_id}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                         >
                             <option value="">-- Tanpa Kategori --</option>
                             {#each classGroups as grp}
@@ -305,7 +305,7 @@
                         <label class="block font-semibold text-foreground mb-1">Instruktur / Tutor</label>
                         <select
                             bind:value={newCourseForm.tutor_id}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                         >
                             <option value="">-- Pilih Tutor --</option>
                             {#each tutors as tut}
@@ -320,7 +320,7 @@
                         <label class="block font-semibold text-foreground mb-1">Tingkat</label>
                         <select
                             bind:value={newCourseForm.level}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                         >
                             <option value="all_levels">Semua Level</option>
                             <option value="beginner">Pemula</option>

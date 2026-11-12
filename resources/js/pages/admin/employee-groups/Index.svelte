@@ -6,6 +6,10 @@
                 href: '/admin/dashboard',
             },
             {
+                title: 'Karyawan',
+                href: '/admin/employees',
+            },
+            {
                 title: 'Group Karyawan',
                 href: '/admin/employee-groups',
             },
@@ -14,7 +18,7 @@
 </script>
 
 <script lang="ts">
-    import { router } from '@inertiajs/svelte';
+    import { Link, router } from '@inertiajs/svelte';
     import AppHead from '@/components/AppHead.svelte';
     import DataTable, { type Column } from '@/components/DataTable.svelte';
     import UsersRound from '@lucide/svelte/icons/users-round';
@@ -237,14 +241,41 @@
                 Kelompokkan karyawan ke dalam grup/tim/batch, dan assign group kelas langsung ke group karyawan.
             </p>
         </div>
-        <button
-            type="button"
-            onclick={openCreateGroup}
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+        <div class="flex items-center gap-2.5">
+            <Link
+                href="/admin/employees"
+                class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold shadow-xs transition-colors shrink-0"
+            >
+                <Users class="size-4 text-muted-foreground" />
+                <span>Daftar Karyawan</span>
+            </Link>
+            <button
+                type="button"
+                onclick={openCreateGroup}
+                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors shrink-0"
+            >
+                <Plus class="size-4" />
+                <span>Tambah Group Karyawan</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Sub-navigation Tabs: Karyawan vs Group Karyawan -->
+    <div class="flex items-center gap-2 border-b border-border/80 pb-1">
+        <Link
+            href="/admin/employees"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-muted"
         >
-            <Plus class="size-4" />
-            <span>Tambah Group Karyawan</span>
-        </button>
+            <Users class="size-4" />
+            <span>Daftar Karyawan ({allEmployees.length})</span>
+        </Link>
+        <Link
+            href="/admin/employee-groups"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
+        >
+            <UsersRound class="size-4" />
+            <span>Group Karyawan ({employeeGroups.length})</span>
+        </Link>
     </div>
 
     <!-- Reusable DataTable -->
@@ -422,7 +453,7 @@
                         <label class="block font-semibold text-foreground mb-1">Kantor / Cabang</label>
                         <select
                             bind:value={groupForm.company_id}
-                            class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                            class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                         >
                             <option value="">Semua Kantor / Pusat</option>
                             {#each companies as comp}
@@ -436,7 +467,7 @@
                     <label class="block font-semibold text-foreground mb-1">Tema Warna Badge</label>
                     <select
                         bind:value={groupForm.badge_color}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                        class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                     >
                         <option value="indigo">Indigo</option>
                         <option value="blue">Blue</option>

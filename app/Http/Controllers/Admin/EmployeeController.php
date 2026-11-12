@@ -17,8 +17,8 @@ class EmployeeController extends Controller
     public function index(Request $request): Response
     {
         $query = User::where('role', 'employee')
-            ->with(['company', 'classGroups', 'enrolledCourses'])
-            ->withCount(['classGroups', 'enrolledCourses']);
+            ->with(['company', 'classGroups', 'enrolledCourses', 'employeeGroups'])
+            ->withCount(['classGroups', 'enrolledCourses', 'employeeGroups']);
 
         if ($request->has('search') && $request->search) {
             $search = $request->search;

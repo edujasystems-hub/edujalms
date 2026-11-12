@@ -365,7 +365,7 @@
                     <label class="block font-semibold text-foreground mb-1">Tema Warna</label>
                     <select
                         bind:value={groupForm.badge_color}
-                        class="w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
+                        class="w-full pl-3 pr-8 py-2 rounded-xl border border-border bg-card text-foreground focus:outline-hidden"
                     >
                         <option value="indigo">Indigo / Blue</option>
                         <option value="emerald">Emerald / Green</option>
