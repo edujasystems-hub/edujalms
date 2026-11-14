@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ClassGroupController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CourseModuleController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EmployeeGroupController;
 use App\Http\Controllers\Admin\LessonController;
@@ -32,6 +33,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/learn/{slug}', [CoursePlayerController::class, 'show'])->name('employee.learn.show');
     Route::post('/learn/{course}/lessons/{lesson}/toggle', [CoursePlayerController::class, 'toggleLessonComplete'])
         ->name('employee.learn.toggle');
+    Route::post('/learn/{course}/lessons/{lesson}/quiz', [CoursePlayerController::class, 'submitQuiz'])
+        ->name('employee.learn.quiz');
     Route::post('/learn/{course}/complete', [CoursePlayerController::class, 'completeCourse'])
         ->name('employee.learn.complete');
 
@@ -50,6 +53,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/courses/{course}/assign', [CourseController::class, 'assignEmployees'])->name('courses.assign');
         Route::delete('/courses/{course}/remove-user/{user}', [CourseController::class, 'removeEmployee'])->name('courses.remove-user');
         Route::post('/courses/{course}/invite', [CourseController::class, 'inviteEmployee'])->name('courses.invite');
+
+        // Module Management (Pengelolaan Modul Kelas)
+        Route::post('/courses/{course}/modules', [CourseModuleController::class, 'store'])->name('modules.store');
+        Route::put('/courses/{course}/modules/{module}', [CourseModuleController::class, 'update'])->name('modules.update');
+        Route::delete('/courses/{course}/modules/{module}', [CourseModuleController::class, 'destroy'])->name('modules.destroy');
+        Route::post('/courses/{course}/modules/{module}/tests', [CourseModuleController::class, 'saveTest'])->name('modules.tests.save');
 
         // Lesson Management (Pengelolaan Pelajaran)
         Route::post('/courses/{course}/lessons', [LessonController::class, 'store'])->name('lessons.store');

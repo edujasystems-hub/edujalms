@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseModule;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,12 +22,36 @@ class CoursePlayerController extends Controller
             'tutor',
             'classGroup',
             'company',
+            'modules' => fn ($q) => $q->orderBy('sort_order', 'asc')->with([
+                'lessons' => fn ($l) => $l->orderBy('sort_order', 'asc'),
+            ]),
             'lessons' => fn ($q) => $q->orderBy('sort_order', 'asc'),
         ])->where('slug', $slug)->firstOrFail();
 
         // Check access
         if (! $user->hasAccessToCourse($course)) {
             return redirect()->route('dashboard')->with('error', 'Anda belum memiliki akses ke kelas ini. Hubungi admin korporat.');
+        }
+
+        // Ensure any unassigned lessons belong to a module
+        $unassignedLessons = $course->lessons()->whereNull('course_module_id')->get();
+        if ($unassignedLessons->isNotEmpty()) {
+            $defaultModule = $course->modules()->first() ?? CourseModule::create([
+                'course_id' => $course->id,
+                'title' => 'Modul 1: Materi Utama',
+                'slug' => 'modul-1-' . Str::random(4),
+                'sort_order' => 1,
+            ]);
+            $course->lessons()->whereNull('course_module_id')->update([
+                'course_module_id' => $defaultModule->id,
+            ]);
+
+            $course->load([
+                'modules' => fn ($q) => $q->orderBy('sort_order', 'asc')->with([
+                    'lessons' => fn ($l) => $l->orderBy('sort_order', 'asc'),
+                ]),
+                'lessons' => fn ($q) => $q->orderBy('sort_order', 'asc'),
+            ]);
         }
 
         // Ensure record in course_user exists and update last_accessed_at
@@ -80,6 +106,7 @@ class CoursePlayerController extends Controller
         $lessonsFormatted = $course->lessons->map(function ($l) use ($completedLessonIds) {
             return [
                 'id' => $l->id,
+                'course_module_id' => $l->course_module_id,
                 'title' => $l->title,
                 'slug' => $l->slug,
                 'description' => $l->description,
@@ -92,6 +119,37 @@ class CoursePlayerController extends Controller
                 'has_post_test' => ! empty($l->post_test),
                 'is_completed' => in_array($l->id, $completedLessonIds),
                 'is_preview' => $l->is_preview,
+            ];
+        });
+
+        // Format modules list
+        $modulesFormatted = $course->modules->map(function ($mod) use ($completedLessonIds) {
+            $modLessons = $mod->lessons->map(function ($l) use ($completedLessonIds) {
+                return [
+                    'id' => $l->id,
+                    'course_module_id' => $l->course_module_id,
+                    'title' => $l->title,
+                    'slug' => $l->slug,
+                    'description' => $l->description,
+                    'sort_order' => $l->sort_order,
+                    'duration_minutes' => $l->duration_minutes,
+                    'points' => (int) ($l->points ?? 50),
+                    'content_type' => $l->content_type,
+                    'due_date' => $l->due_date ? $l->due_date->format('Y-m-d') : null,
+                    'is_completed' => in_array($l->id, $completedLessonIds),
+                    'is_preview' => $l->is_preview,
+                ];
+            });
+
+            return [
+                'id' => $mod->id,
+                'title' => $mod->title,
+                'slug' => $mod->slug,
+                'description' => $mod->description,
+                'sort_order' => $mod->sort_order,
+                'lessons' => $modLessons->values()->all(),
+                'completed_count' => $modLessons->where('is_completed', true)->count(),
+                'total_lessons' => $modLessons->count(),
             ];
         });
 
@@ -110,6 +168,11 @@ class CoursePlayerController extends Controller
             ? \Illuminate\Support\Carbon::parse($enrollment->completed_at)->translatedFormat('d F Y')
             : ($isCompleted ? now()->translatedFormat('d F Y') : null);
         $certificateCode = 'EDJ-LMS-' . str_pad($course->id, 3, '0', STR_PAD_LEFT) . '-' . str_pad($user->id, 4, '0', STR_PAD_LEFT) . '-' . ($enrollment && $enrollment->completed_at ? date('Ymd', strtotime($enrollment->completed_at)) : date('Ymd'));
+
+        $activeLessonQuestions = $activeLesson ? (
+            $activeLesson->quiz_questions
+            ?? ($activeLesson->pre_test['questions'] ?? ($activeLesson->post_test['questions'] ?? []))
+        ) : [];
 
         return Inertia::render('employee/CoursePlayer', [
             'course' => [
@@ -142,9 +205,12 @@ class CoursePlayerController extends Controller
                 'badge' => $user->badge ?? $user->gamification_tier['badge'],
                 'company' => $user->company ? ['name' => $user->company->name] : null,
             ],
+            'modules' => $modulesFormatted,
             'lessons' => $lessonsFormatted,
             'activeLesson' => $activeLesson ? [
                 'id' => $activeLesson->id,
+                'course_module_id' => $activeLesson->course_module_id,
+                'module_title' => $activeLesson->module?->title,
                 'title' => $activeLesson->title,
                 'slug' => $activeLesson->slug,
                 'description' => $activeLesson->description,
@@ -153,6 +219,8 @@ class CoursePlayerController extends Controller
                 'points' => (int) ($activeLesson->points ?? 50),
                 'content_type' => $activeLesson->content_type,
                 'due_date' => $activeLesson->due_date ? $activeLesson->due_date->format('Y-m-d') : null,
+                'quiz_questions' => $activeLessonQuestions,
+                'passing_score' => (int) ($activeLesson->passing_score ?? ($activeLesson->pre_test['passing_score'] ?? ($activeLesson->post_test['passing_score'] ?? 70))),
                 'pre_test' => $activeLesson->pre_test,
                 'post_test' => $activeLesson->post_test,
                 'video_url' => $activeLesson->video_url,
@@ -162,6 +230,7 @@ class CoursePlayerController extends Controller
                 'attachments' => $activeLesson->attachments ?? [],
                 'is_completed' => in_array($activeLesson->id, $completedLessonIds),
             ] : null,
+            'quizResult' => session('quiz_result'),
         ]);
     }
 
@@ -280,6 +349,114 @@ class CoursePlayerController extends Controller
             : "Status pelajaran diubah menjadi belum selesai.";
 
         return back()->with('success', $msg);
+    }
+
+    public function submitQuiz(Request $request, Course $course, Lesson $lesson): \Illuminate\Http\RedirectResponse
+    {
+        $user = $request->user();
+
+        if (! $user->hasAccessToCourse($course)) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'answers' => 'required|array',
+        ]);
+
+        $questions = $lesson->quiz_questions
+            ?? ($lesson->pre_test['questions'] ?? ($lesson->post_test['questions'] ?? []));
+
+        if (empty($questions)) {
+            return back()->with('error', 'Soal evaluasi tidak ditemukan.');
+        }
+
+        $correctCount = 0;
+        foreach ($questions as $idx => $q) {
+            if (isset($validated['answers'][$idx]) && (int) $validated['answers'][$idx] === (int) $q['correct_answer']) {
+                $correctCount++;
+            }
+        }
+
+        $scorePercent = count($questions) > 0 ? round(($correctCount / count($questions)) * 100) : 0;
+        $passingScore = (int) ($lesson->passing_score ?? ($lesson->pre_test['passing_score'] ?? ($lesson->post_test['passing_score'] ?? 70)));
+        $isPassed = $scorePercent >= $passingScore;
+
+        // Pre-test completes when taken; Post-test completes if passed
+        $markComplete = ($lesson->content_type === 'pre_test') || $isPassed;
+
+        if ($markComplete) {
+            $lessonPoints = (int) ($lesson->points ?? 50);
+
+            $existing = DB::table('lesson_user')
+                ->where('user_id', $user->id)
+                ->where('lesson_id', $lesson->id)
+                ->first();
+
+            if (! $existing) {
+                DB::table('lesson_user')->insert([
+                    'user_id' => $user->id,
+                    'lesson_id' => $lesson->id,
+                    'course_id' => $course->id,
+                    'is_completed' => true,
+                    'points_earned' => $lessonPoints,
+                    'completed_at' => now(),
+                    'last_watched_seconds' => $lesson->duration_minutes * 60,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $user->increment('total_points', $lessonPoints);
+            } elseif (! $existing->is_completed) {
+                DB::table('lesson_user')
+                    ->where('id', $existing->id)
+                    ->update([
+                        'is_completed' => true,
+                        'points_earned' => $lessonPoints,
+                        'completed_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                $user->increment('total_points', $lessonPoints);
+            }
+
+            // Recalculate progress for the course
+            $totalLessons = $course->lessons()->count();
+            $completedLessons = DB::table('lesson_user')
+                ->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->where('is_completed', true)
+                ->count();
+
+            $progressPercent = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+            $status = $progressPercent >= 100 ? 'completed' : ($progressPercent > 0 ? 'in_progress' : 'enrolled');
+
+            DB::table('course_user')
+                ->where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->update([
+                    'progress_percent' => $progressPercent,
+                    'status' => $status,
+                    'completed_at' => $status === 'completed' ? now() : null,
+                    'last_accessed_at' => now(),
+                    'updated_at' => now(),
+                ]);
+        }
+
+        $testTypeLabel = $lesson->content_type === 'pre_test' ? 'Pre-Test' : 'Post-Test';
+        $msg = $isPassed
+            ? "Selamat! Anda lulus {$testTypeLabel} dengan skor {$scorePercent}%. (+{$lesson->points} XP)"
+            : ($lesson->content_type === 'pre_test'
+                ? "Hasil {$testTypeLabel}: {$scorePercent}%. Pemahaman awal Anda tercatat. Silakan lanjutkan ke materi berikutnya."
+                : "Hasil {$testTypeLabel}: {$scorePercent}%. Belum mencapai target kelulusan ({$passingScore}%). Anda dapat mengulanginya.");
+
+        return back()->with('quiz_result', [
+            'lesson_id' => $lesson->id,
+            'score' => $scorePercent,
+            'correct' => $correctCount,
+            'total' => count($questions),
+            'passed' => $isPassed,
+            'answers' => $validated['answers'],
+        ])->with('success', $msg);
     }
 
     public function completeCourse(Request $request, Course $course): \Illuminate\Http\RedirectResponse

@@ -13,6 +13,7 @@ class Lesson extends Model
 
     protected $fillable = [
         'course_id',
+        'course_module_id',
         'title',
         'slug',
         'description',
@@ -28,6 +29,8 @@ class Lesson extends Model
         'due_date',
         'pre_test',
         'post_test',
+        'quiz_questions',
+        'passing_score',
         'points',
     ];
 
@@ -41,6 +44,8 @@ class Lesson extends Model
             'due_date' => 'date',
             'pre_test' => 'array',
             'post_test' => 'array',
+            'quiz_questions' => 'array',
+            'passing_score' => 'integer',
             'points' => 'integer',
         ];
     }
@@ -48,6 +53,11 @@ class Lesson extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function module(): BelongsTo
+    {
+        return $this->belongsTo(CourseModule::class, 'course_module_id');
     }
 
     public function userProgress(): BelongsToMany

@@ -63,6 +63,9 @@ class CourseController extends Controller
             'classGroup',
             'tutor',
             'company',
+            'modules' => fn ($q) => $q->orderBy('sort_order', 'asc')->with([
+                'lessons' => fn ($l) => $l->orderBy('sort_order', 'asc'),
+            ]),
             'lessons' => fn ($q) => $q->orderBy('sort_order', 'asc'),
             'enrolledUsers' => fn ($q) => $q->select('users.id', 'users.name', 'users.email', 'users.avatar', 'users.position', 'users.company_id'),
             'invitations',

@@ -2,6 +2,7 @@
 
 use App\Models\ClassGroup;
 use App\Models\Course;
+use App\Models\CourseModule;
 use App\Models\EmployeeGroup;
 use App\Models\Lesson;
 use App\Models\User;
@@ -261,5 +262,129 @@ test('admin can manage employee groups and assign class groups to employee group
     foreach ($coursesInClassGroup as $c) {
         expect($accessibleCourses->contains('id', $c->id))->toBeTrue();
     }
+});
+
+test('admin can manage course modules and configure pre-test and post-test multiple choice questions', function () {
+    $admin = User::where('role', 'admin')->first();
+    $course = Course::first();
+
+    // 1. Admin creates a module
+    $response = $this->actingAs($admin)->post("/admin/courses/{$course->id}/modules", [
+        'title' => 'Modul Khusus: AI Ethics',
+        'description' => 'Diskusi etika dan regulasi AI',
+        'sort_order' => 10,
+    ]);
+    $response->assertRedirect();
+
+    $module = CourseModule::where('title', 'Modul Khusus: AI Ethics')->first();
+    expect($module)->not->toBeNull();
+    expect($module->course_id)->toBe($course->id);
+
+    // 2. Admin configures Pre-Test for this module
+    $preTestResponse = $this->actingAs($admin)->post("/admin/courses/{$course->id}/modules/{$module->id}/tests", [
+        'test_type' => 'pre_test',
+        'is_active' => true,
+        'title' => 'Pre-Test: Pemahaman Etika AI',
+        'instructions' => 'Jawab soal sebelum belajar.',
+        'passing_score' => 80,
+        'duration_minutes' => 10,
+        'points' => 30,
+        'questions' => [
+            [
+                'question' => 'Apakah data pelanggan boleh dipublikasikan?',
+                'options' => ['Boleh', 'Tidak Boleh', 'Terserah', 'Ragu-ragu'],
+                'correct_answer' => 1,
+                'explanation' => 'Data pribadi wajib dilindungi UU PDP.',
+            ],
+        ],
+    ]);
+    $preTestResponse->assertRedirect();
+
+    $preTestLesson = $module->preTestLesson();
+    expect($preTestLesson)->not->toBeNull();
+    expect($preTestLesson->content_type)->toBe('pre_test');
+    expect($preTestLesson->passing_score)->toBe(80);
+    expect(count($preTestLesson->quiz_questions))->toBe(1);
+
+    // 3. Admin configures Post-Test for this module
+    $postTestResponse = $this->actingAs($admin)->post("/admin/courses/{$course->id}/modules/{$module->id}/tests", [
+        'test_type' => 'post_test',
+        'is_active' => true,
+        'title' => 'Post-Test: Sertifikasi Etika AI',
+        'instructions' => 'Evaluasi kelulusan modul.',
+        'passing_score' => 70,
+        'duration_minutes' => 15,
+        'points' => 50,
+        'questions' => [
+            [
+                'question' => 'Apa sanksi pelanggaran UU PDP?',
+                'options' => ['Denda administratif dan pidana', 'Hadiah', 'Libur', 'Pujian'],
+                'correct_answer' => 0,
+                'explanation' => 'UU PDP mengatur sanksi tegas.',
+            ],
+        ],
+    ]);
+    $postTestResponse->assertRedirect();
+
+    $postTestLesson = $module->postTestLesson();
+    expect($postTestLesson)->not->toBeNull();
+    expect($postTestLesson->content_type)->toBe('post_test');
+    expect($postTestLesson->passing_score)->toBe(70);
+
+    // 4. Admin updates the module
+    $this->actingAs($admin)->put("/admin/courses/{$course->id}/modules/{$module->id}", [
+        'title' => 'Modul Khusus: AI Ethics Updated',
+        'description' => 'Deskripsi baru',
+        'sort_order' => 12,
+    ])->assertRedirect();
+
+    expect($module->fresh()->title)->toBe('Modul Khusus: AI Ethics Updated');
+});
+
+test('employee course player loads modules and employee can submit multiple choice quiz', function () {
+    $employee = User::where('role', 'employee')->first();
+    $course = Course::with('modules.lessons')->first();
+
+    // Ensure access
+    DB::table('course_user')->updateOrInsert(
+        ['user_id' => $employee->id, 'course_id' => $course->id],
+        ['status' => 'in_progress', 'progress_percent' => 10, 'last_accessed_at' => now(), 'created_at' => now(), 'updated_at' => now()]
+    );
+
+    // Course player page response
+    $response = $this->actingAs($employee)->get("/learn/{$course->slug}");
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page
+        ->component('employee/CoursePlayer')
+        ->has('course')
+        ->has('modules')
+        ->has('lessons')
+        ->has('activeLesson')
+    );
+
+    // Find a quiz lesson (pre_test or post_test)
+    $quizLesson = $course->lessons()->whereIn('content_type', ['pre_test', 'post_test'])->first();
+    expect($quizLesson)->not->toBeNull();
+
+    // Submit quiz with correct answer
+    $questions = $quizLesson->quiz_questions;
+    $answers = [];
+    foreach ($questions as $idx => $q) {
+        $answers[$idx] = $q['correct_answer'];
+    }
+
+    $quizResponse = $this->actingAs($employee)->post("/learn/{$course->id}/lessons/{$quizLesson->id}/quiz", [
+        'answers' => $answers,
+    ]);
+    $quizResponse->assertRedirect();
+
+    // Verify completion recorded in DB
+    $isCompletedInDb = DB::table('lesson_user')
+        ->where('user_id', $employee->id)
+        ->where('lesson_id', $quizLesson->id)
+        ->where('is_completed', true)
+        ->exists();
+
+    expect($isCompletedInDb)->toBeTrue();
 });
 

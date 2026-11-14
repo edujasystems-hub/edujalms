@@ -40,6 +40,8 @@
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
     import X from '@lucide/svelte/icons/x';
     import ClipboardCheck from '@lucide/svelte/icons/clipboard-check';
+    import Layers from '@lucide/svelte/icons/layers';
+    import Check from '@lucide/svelte/icons/check';
     import { formatDate } from '@/lib/utils';
 
     interface QuizQuestion {
@@ -50,15 +52,9 @@
         explanation?: string;
     }
 
-    interface QuizTest {
-        title: string;
-        instructions?: string;
-        passing_score?: number;
-        questions: QuizQuestion[];
-    }
-
     interface LessonItem {
         id: number;
+        course_module_id?: number | null;
         title: string;
         slug: string;
         description?: string;
@@ -68,18 +64,30 @@
         content_type: string;
         is_completed: boolean;
         is_preview?: boolean;
-        has_pre_test?: boolean;
-        has_post_test?: boolean;
         due_date?: string | null;
     }
 
+    interface ModuleItem {
+        id: number;
+        title: string;
+        slug: string;
+        description?: string;
+        sort_order: number;
+        completed_count: number;
+        total_lessons: number;
+        lessons: LessonItem[];
+    }
+
     interface ActiveLesson extends LessonItem {
+        module_title?: string;
         video_url?: string;
         audio_url?: string;
         content_text?: string;
         pdf_url?: string;
-        pre_test?: QuizTest | null;
-        post_test?: QuizTest | null;
+        quiz_questions?: QuizQuestion[];
+        passing_score?: number;
+        pre_test?: any;
+        post_test?: any;
         attachments?: Array<{
             name: string;
             url: string;
@@ -90,14 +98,18 @@
 
     let {
         course,
+        modules = [],
         lessons = [],
         activeLesson,
         user = null,
+        quizResult = null,
     }: {
         course: any;
+        modules?: ModuleItem[];
         lessons: LessonItem[];
         activeLesson: ActiveLesson | null;
         user?: any;
+        quizResult?: any;
     } = $props();
 
     let isCertificateOpen = $state(false);
@@ -162,65 +174,82 @@
 
     let isSubmitting = $state(false);
 
-    // Pre-Test Interactivity State
-    let preTestAnswers = $state<Record<number, number>>({});
-    let preTestSubmitted = $state(false);
-    let preTestScore = $state(0);
+    // ==========================================
+    // MULTIPLE CHOICE QUIZ INTERACTIVITY (Pre-Test / Post-Test)
+    // ==========================================
+    let quizAnswers = $state<Record<number, number>>({});
+    let isSubmittingQuiz = $state(false);
+    let localQuizResult = $state<{
+        score: number;
+        passed: boolean;
+        correct: number;
+        total: number;
+    } | null>(null);
 
-    // Post-Test Interactivity State
-    let postTestAnswers = $state<Record<number, number>>({});
-    let postTestSubmitted = $state(false);
-    let postTestScore = $state(0);
-
-    // Reset test state when active lesson changes
+    // Reset quiz state when active lesson changes
     $effect(() => {
         if (activeLesson) {
-            preTestAnswers = {};
-            preTestSubmitted = false;
-            preTestScore = 0;
-
-            postTestAnswers = {};
-            postTestSubmitted = false;
-            postTestScore = 0;
+            quizAnswers = {};
+            localQuizResult = null;
         }
     });
 
-    function submitPreTest() {
-        if (!activeLesson?.pre_test?.questions?.length) return;
-        const questions = activeLesson.pre_test.questions;
+    const isQuizLesson = $derived(
+        activeLesson?.content_type === 'pre_test' || activeLesson?.content_type === 'post_test'
+    );
+
+    const questionsList = $derived(
+        activeLesson?.quiz_questions?.length
+            ? activeLesson.quiz_questions
+            : (activeLesson?.pre_test?.questions || activeLesson?.post_test?.questions || [])
+    );
+
+    function submitQuiz() {
+        if (!activeLesson || !questionsList.length) return;
+
+        const answeredCount = Object.keys(quizAnswers).length;
+        if (answeredCount < questionsList.length) {
+            if (!confirm(`Anda baru menjawab ${answeredCount} dari ${questionsList.length} soal. Kirim jawaban sekarang?`)) {
+                return;
+            }
+        }
+
+        isSubmittingQuiz = true;
+
+        // Calculate score locally for instant visual feedback
         let correctCount = 0;
-        questions.forEach((q, idx) => {
-            if (preTestAnswers[idx] === q.correct_answer) {
+        questionsList.forEach((q: QuizQuestion, idx: number) => {
+            if (quizAnswers[idx] === q.correct_answer) {
                 correctCount++;
             }
         });
-        preTestScore = Math.round((correctCount / questions.length) * 100);
-        preTestSubmitted = true;
-    }
+        const score = Math.round((correctCount / questionsList.length) * 100);
+        const passingScore = activeLesson.passing_score ?? 70;
+        const passed = score >= passingScore;
 
-    function resetPreTest() {
-        preTestAnswers = {};
-        preTestSubmitted = false;
-        preTestScore = 0;
-    }
+        localQuizResult = {
+            score,
+            passed,
+            correct: correctCount,
+            total: questionsList.length,
+        };
 
-    function submitPostTest() {
-        if (!activeLesson?.post_test?.questions?.length) return;
-        const questions = activeLesson.post_test.questions;
-        let correctCount = 0;
-        questions.forEach((q, idx) => {
-            if (postTestAnswers[idx] === q.correct_answer) {
-                correctCount++;
+        // Submit to backend to persist XP, lesson_user & course_user progress
+        router.post(
+            `/learn/${course.id}/lessons/${activeLesson.id}/quiz`,
+            { answers: quizAnswers },
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    isSubmittingQuiz = false;
+                },
             }
-        });
-        postTestScore = Math.round((correctCount / questions.length) * 100);
-        postTestSubmitted = true;
+        );
     }
 
-    function resetPostTest() {
-        postTestAnswers = {};
-        postTestSubmitted = false;
-        postTestScore = 0;
+    function resetQuiz() {
+        quizAnswers = {};
+        localQuizResult = null;
     }
 
     function toggleLessonCompletion() {
@@ -234,10 +263,28 @@
         });
     }
 
-    // Determine next and previous lessons
+    // Determine next and previous lessons sequentially
     const currentIndex = $derived(lessons.findIndex((l) => l.id === activeLesson?.id));
     const prevLesson = $derived(currentIndex > 0 ? lessons[currentIndex - 1] : null);
     const nextLesson = $derived(currentIndex < lessons.length - 1 ? lessons[currentIndex + 1] : null);
+
+    // Grouping fallback if modules prop is empty
+    const displayModules = $derived(
+        modules.length > 0
+            ? modules
+            : [
+                {
+                    id: 0,
+                    title: 'Modul Pelajaran',
+                    slug: 'modul-pelajaran',
+                    description: '',
+                    sort_order: 1,
+                    completed_count: course.completed_lessons,
+                    total_lessons: course.total_lessons,
+                    lessons: lessons,
+                },
+            ]
+    );
 </script>
 
 <AppHead title="{activeLesson ? activeLesson.title : 'Belajar'} - {course.title}" />
@@ -335,30 +382,53 @@
     >
         <div class="flex items-center gap-2 min-w-0 pr-2">
             <BookOpen class="size-4 text-indigo-600 shrink-0" />
-            <span class="font-semibold text-foreground truncate">
-                #{activeLesson?.sort_order ?? 1}. {activeLesson?.title ?? ''}
-            </span>
+            <div class="min-w-0">
+                {#if activeLesson?.module_title}
+                    <span class="text-[10px] text-muted-foreground block truncate">{activeLesson.module_title}</span>
+                {/if}
+                <span class="font-semibold text-foreground truncate block">
+                    {activeLesson?.title ?? 'Pilih Pelajaran'}
+                </span>
+            </div>
         </div>
         <div class="flex items-center gap-1 text-[11px] font-medium text-muted-foreground shrink-0">
-            <span>{course.completed_lessons}/{course.total_lessons} Modul</span>
+            <span>{course.completed_lessons}/{course.total_lessons} Selesai</span>
             <ArrowRight class="size-3 text-muted-foreground/70" />
         </div>
     </button>
 
     <!-- Main Layout: Content Player (Left) + Curriculum Sidebar (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <!-- Left: Lesson Content Viewer (8 cols) -->
-        <div class="lg:col-span-8 space-y-6">
+        <!-- Left: Lesson / Test Content Viewer (8 cols) -->
+        <div class="lg:col-span-8 space-y-5">
             {#if activeLesson}
-                <!-- Lesson Header -->
+                <!-- Lesson / Test Header -->
                 <div class="space-y-1">
                     <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-indigo-600 dark:text-indigo-400">
-                                Modul #{activeLesson.sort_order}
-                            </span>
+                            {#if activeLesson.module_title}
+                                <span class="font-bold text-indigo-600 dark:text-indigo-400">
+                                    {activeLesson.module_title}
+                                </span>
+                                <span>•</span>
+                            {/if}
+                            {#if activeLesson.content_type === 'pre_test'}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-blue-600 text-white">
+                                    Pre-Test
+                                </span>
+                            {:else if activeLesson.content_type === 'post_test'}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-purple-600 text-white">
+                                    Post-Test
+                                </span>
+                            {:else}
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold uppercase bg-muted text-muted-foreground">
+                                    {activeLesson.content_type}
+                                </span>
+                            {/if}
                             <span>•</span>
                             <span>{activeLesson.duration_minutes} Menit</span>
+                            <span>•</span>
+                            <span class="text-amber-600 font-semibold">+{activeLesson.points ?? 50} XP</span>
                             {#if activeLesson.due_date}
                                 <span>•</span>
                                 <span class="text-amber-600 dark:text-amber-400">
@@ -386,102 +456,141 @@
                     {/if}
                 </div>
 
-                <!-- Pre-Test Section (Optional) -->
-                {#if activeLesson.pre_test?.questions?.length}
-                    <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-4">
-                        <div class="flex items-center justify-between pb-3 border-b border-border/60">
+                <!-- ============================================== -->
+                <!-- QUIZ PLAYER VIEW (Pre-Test / Post-Test) -->
+                <!-- ============================================== -->
+                {#if isQuizLesson}
+                    <div class="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-xs space-y-5">
+                        <div class="flex items-center justify-between pb-3 border-b border-border/80">
                             <div class="flex items-center gap-2.5">
-                                <div class="size-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                    PRE
+                                <div class="size-8 rounded-xl {activeLesson.content_type === 'pre_test' ? 'bg-blue-600' : 'bg-purple-600'} text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    <ClipboardCheck class="size-4.5" />
                                 </div>
                                 <div>
-                                    <h3 class="text-sm font-bold text-foreground">
-                                        {activeLesson.pre_test.title || 'Pre-Test Pelajaran'}
+                                    <h3 class="text-sm sm:text-base font-bold text-foreground">
+                                        Evaluasi Pilihan Ganda ({questionsList.length} Soal)
                                     </h3>
-                                    {#if activeLesson.pre_test.instructions}
-                                        <p class="text-xs text-muted-foreground">
-                                            {activeLesson.pre_test.instructions}
-                                        </p>
-                                    {/if}
+                                    <p class="text-xs text-muted-foreground">
+                                        Pilihlah salah satu jawaban yang paling tepat. Target kelulusan: {activeLesson.passing_score ?? 70}%
+                                    </p>
                                 </div>
                             </div>
-                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                Target: {activeLesson.pre_test.passing_score ?? 70}%
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground shrink-0">
+                                KKM: {activeLesson.passing_score ?? 70}%
                             </span>
                         </div>
 
-                        {#if !preTestSubmitted}
-                            <div class="space-y-4 pt-1">
-                                {#each activeLesson.pre_test.questions as q, qIdx (q.id || qIdx)}
-                                    <div class="p-4 rounded-xl border border-border bg-card space-y-3">
-                                        <div class="text-xs font-semibold text-foreground flex items-start gap-2">
-                                            <span class="size-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0 text-[11px] font-bold">
+                        {#if !localQuizResult}
+                            <!-- Quiz Question List -->
+                            <div class="space-y-4">
+                                {#each questionsList as q, qIdx (q.id || qIdx)}
+                                    <div class="p-4 sm:p-5 rounded-2xl border border-border bg-muted/15 space-y-3">
+                                        <div class="text-xs sm:text-sm font-semibold text-foreground flex items-start gap-2.5">
+                                            <span class="size-6 rounded-full {activeLesson.content_type === 'pre_test' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300' : 'bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300'} flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">
                                                 {qIdx + 1}
                                             </span>
-                                            <span class="leading-relaxed">{q.question}</span>
+                                            <span class="leading-relaxed flex-1">{q.question}</span>
                                         </div>
-                                        <div class="space-y-1.5 pl-7">
+
+                                        <div class="space-y-2 pl-0 sm:pl-8 pt-1">
                                             {#each q.options as opt, optIdx}
+                                                {@const isSelected = quizAnswers[qIdx] === optIdx}
                                                 <label
-                                                    class="flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all {preTestAnswers[qIdx] === optIdx ? 'border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 text-foreground font-semibold shadow-xs' : 'border-border/60 hover:bg-muted/50 text-muted-foreground'}"
+                                                    class="flex items-center gap-3 p-3 rounded-xl border text-xs cursor-pointer transition-all {isSelected ? (activeLesson.content_type === 'pre_test' ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 text-foreground font-semibold shadow-xs' : 'border-purple-500 bg-purple-50/70 dark:bg-purple-950/40 text-foreground font-semibold shadow-xs') : 'border-border/70 hover:bg-card text-muted-foreground'}"
                                                 >
                                                     <input
                                                         type="radio"
-                                                        name="pre_q_{qIdx}"
-                                                        checked={preTestAnswers[qIdx] === optIdx}
-                                                        onchange={() => (preTestAnswers[qIdx] = optIdx)}
-                                                        class="size-3.5 text-indigo-600 focus:ring-indigo-500"
+                                                        name="quiz_q_{qIdx}"
+                                                        checked={isSelected}
+                                                        onchange={() => (quizAnswers[qIdx] = optIdx)}
+                                                        class="size-4 {activeLesson.content_type === 'pre_test' ? 'text-blue-600 focus:ring-blue-500' : 'text-purple-600 focus:ring-purple-500'}"
                                                     />
-                                                    <span>{opt}</span>
+                                                    <span class="font-bold w-4">{['A', 'B', 'C', 'D', 'E', 'F'][optIdx]}.</span>
+                                                    <span class="flex-1">{opt}</span>
                                                 </label>
                                             {/each}
                                         </div>
                                     </div>
                                 {/each}
 
-                                <div class="flex justify-end pt-1">
+                                <div class="flex items-center justify-between pt-2">
+                                    <span class="text-xs text-muted-foreground">
+                                        Terjawab: <strong class="text-foreground">{Object.keys(quizAnswers).length}</strong> dari {questionsList.length} soal
+                                    </span>
                                     <button
                                         type="button"
-                                        onclick={submitPreTest}
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition-colors"
+                                        onclick={submitQuiz}
+                                        disabled={isSubmittingQuiz || questionsList.length === 0}
+                                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold {activeLesson.content_type === 'pre_test' ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'} text-white shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
                                     >
                                         <ClipboardCheck class="size-4" />
-                                        <span>Kirim Jawaban Pre-Test</span>
+                                        <span>{isSubmittingQuiz ? 'Memproses...' : 'Kirim Jawaban'}</span>
                                     </button>
                                 </div>
                             </div>
                         {:else}
                             <!-- Result Screen -->
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-4 rounded-xl border {preTestScore >= (activeLesson.pre_test.passing_score ?? 70) ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200' : 'border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200'}">
-                                    <div class="flex items-center gap-3">
-                                        {#if preTestScore >= (activeLesson.pre_test.passing_score ?? 70)}
-                                            <CheckCircle2 class="size-6 text-emerald-600 shrink-0" />
+                            <div class="space-y-5">
+                                <div class="p-4 sm:p-5 rounded-2xl border {localQuizResult.passed ? 'border-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-100' : 'border-amber-300 bg-amber-50/80 dark:bg-amber-950/30 text-amber-900 dark:text-amber-100'} flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3.5">
+                                        {#if localQuizResult.passed}
+                                            <div class="size-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                                                <CheckCircle2 class="size-6" />
+                                            </div>
                                             <div>
-                                                <div class="text-sm font-bold">Lulus Pre-Test! Skor: {preTestScore}%</div>
-                                                <div class="text-xs opacity-90">Pemahaman awal Anda sangat baik. Silakan pelajari materi berikut.</div>
+                                                <div class="text-sm sm:text-base font-bold">
+                                                    Lulus! Skor Anda: {localQuizResult.score}%
+                                                </div>
+                                                <div class="text-xs opacity-90 mt-0.5">
+                                                    Benar: {localQuizResult.correct} dari {localQuizResult.total} soal. Selamat! XP berhasil ditambahkan.
+                                                </div>
                                             </div>
                                         {:else}
-                                            <AlertCircle class="size-6 text-amber-600 shrink-0" />
+                                            <div class="size-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0">
+                                                <AlertCircle class="size-6" />
+                                            </div>
                                             <div>
-                                                <div class="text-sm font-bold">Hasil Pre-Test: {preTestScore}%</div>
-                                                <div class="text-xs opacity-90">Jangan khawatir, simak materi di bawah untuk memperdalam pemahaman Anda.</div>
+                                                <div class="text-sm sm:text-base font-bold">
+                                                    Skor Anda: {localQuizResult.score}% (Target: {activeLesson.passing_score ?? 70}%)
+                                                </div>
+                                                <div class="text-xs opacity-90 mt-0.5">
+                                                    Benar: {localQuizResult.correct} dari {localQuizResult.total} soal.
+                                                    {#if activeLesson.content_type === 'pre_test'}
+                                                        Hasil awal Anda telah tercatat. Silakan lanjutkan menyimak materi modul.
+                                                    {:else}
+                                                        Skor belum mencapai target KKM. Anda dapat mengulanginya untuk lulus.
+                                                    {/if}
+                                                </div>
                                             </div>
                                         {/if}
                                     </div>
-                                    <button
-                                        type="button"
-                                        onclick={resetPreTest}
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold hover:bg-muted text-foreground transition-colors shrink-0"
-                                    >
-                                        <RotateCcw class="size-3.5" />
-                                        <span>Ulangi Pre-Test</span>
-                                    </button>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button
+                                            type="button"
+                                            onclick={resetQuiz}
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card text-xs font-semibold hover:bg-muted text-foreground transition-colors cursor-pointer"
+                                        >
+                                            <RotateCcw class="size-3.5" />
+                                            <span>Ulangi Tes</span>
+                                        </button>
+                                        {#if nextLesson}
+                                            <Link
+                                                href="/learn/{course.slug}?lesson={nextLesson.slug}"
+                                                class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs transition-colors"
+                                            >
+                                                <span>Pelajaran Berikutnya</span>
+                                                <ArrowRight class="size-3.5" />
+                                            </Link>
+                                        {/if}
+                                    </div>
                                 </div>
 
+                                <!-- Review Jawaban & Pembahasan -->
                                 <div class="space-y-3 pt-1">
-                                    {#each activeLesson.pre_test.questions as q, qIdx}
-                                        {@const isCorrect = preTestAnswers[qIdx] === q.correct_answer}
+                                    <h4 class="text-xs font-bold text-foreground">Pembahasan & Kunci Jawaban:</h4>
+                                    {#each questionsList as q, qIdx}
+                                        {@const isCorrect = quizAnswers[qIdx] === q.correct_answer}
                                         <div class="p-3.5 rounded-xl border {isCorrect ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20' : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20'} space-y-2 text-xs">
                                             <div class="font-semibold text-foreground flex items-center justify-between">
                                                 <span class="flex items-center gap-2">
@@ -497,9 +606,13 @@
                                                 </span>
                                             </div>
                                             <div class="pl-6 space-y-1 text-muted-foreground">
-                                                <div>Pilihan Anda: <span class="font-medium {isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">{q.options[preTestAnswers[qIdx]] ?? 'Belum dijawab'}</span></div>
+                                                <div>
+                                                    Pilihan Anda: <span class="font-medium {isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">{q.options[quizAnswers[qIdx]] ?? 'Belum dijawab'}</span>
+                                                </div>
                                                 {#if !isCorrect}
-                                                    <div>Kunci Jawaban: <span class="font-semibold text-emerald-700 dark:text-emerald-300">{q.options[q.correct_answer]}</span></div>
+                                                    <div>
+                                                        Kunci Jawaban: <span class="font-semibold text-emerald-700 dark:text-emerald-300">{['A', 'B', 'C', 'D', 'E', 'F'][q.correct_answer]}. {q.options[q.correct_answer]}</span>
+                                                    </div>
                                                 {/if}
                                                 {#if q.explanation}
                                                     <div class="p-2.5 rounded-lg bg-card border border-border/60 text-[11px] text-foreground/80 mt-1.5">
@@ -513,241 +626,114 @@
                             </div>
                         {/if}
                     </div>
-                {/if}
-
-                <!-- 1. Video Player Section (YouTube embed) -->
-                {#if embedVideoUrl}
-                    <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-xs border border-border/80">
-                        <iframe
-                            src={embedVideoUrl}
-                            title={activeLesson.title}
-                            class="absolute inset-0 size-full border-0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            allowfullscreen
-                        ></iframe>
-                    </div>
-                {/if}
-
-                <!-- 2. Audio Player Section -->
-                {#if activeLesson.audio_url}
-                    <div class="p-3 sm:p-4 rounded-2xl border border-border bg-card shadow-xs flex items-center gap-3">
-                        <Headphones class="size-4 text-indigo-600 shrink-0" />
-                        <audio
-                            controls
-                            class="w-full h-8"
-                            src={activeLesson.audio_url}
-                        >
-                            Browser Anda tidak mendukung audio player.
-                        </audio>
-                    </div>
-                {/if}
-
-                <!-- 3. Formatted Text / Reading Content -->
-                {#if activeLesson.content_text}
-                    <div class="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
-                        <div class="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:my-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-500 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_code]:text-indigo-600 dark:[&_code]:text-indigo-400 [&_a]:text-indigo-600 [&_a]:underline">
-                            {@html formatLessonContent(activeLesson.content_text)}
-                        </div>
-                    </div>
-                {/if}
-
-                <!-- 4. PDF Embed Option -->
-                {#if activeLesson.pdf_url}
-                    <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-3">
-                        <div class="flex items-center justify-between pb-2 border-b border-border/50 text-xs">
-                            <span class="font-semibold text-foreground">Dokumen PDF Tersemat</span>
-                            <a
-                                href={activeLesson.pdf_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
-                            >
-                                <ExternalLink class="size-3.5" />
-                                <span>Fullscreen</span>
-                            </a>
-                        </div>
-
-                        <!-- Embedded PDF Object / Iframe -->
-                        <div class="relative w-full h-[500px] rounded-xl overflow-hidden border border-border bg-muted/30">
+                {:else}
+                    <!-- ============================================== -->
+                    <!-- REGULAR LESSON PLAYER VIEW (Video, Audio, PDF, Text) -->
+                    <!-- ============================================== -->
+                    <!-- 1. Video Player Section (YouTube embed) -->
+                    {#if embedVideoUrl}
+                        <div class="relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-xs border border-border/80">
                             <iframe
-                                src="{activeLesson.pdf_url}#toolbar=1"
-                                class="size-full border-0"
-                                title="PDF Viewer"
-                            >
-                                <p class="p-6 text-sm text-center text-muted-foreground">
-                                    Browser Anda tidak mendukung preview PDF langsung. Silakan
-                                    <a href={activeLesson.pdf_url} target="_blank" class="text-indigo-600 underline">klik di sini untuk mengunduh</a>.
-                                </p>
-                            </iframe>
+                                src={embedVideoUrl}
+                                title={activeLesson.title}
+                                class="absolute inset-0 size-full border-0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                allowfullscreen
+                            ></iframe>
                         </div>
-                    </div>
-                {/if}
+                    {/if}
 
-                <!-- 5. Attachments Files Section -->
-                {#if activeLesson.attachments && activeLesson.attachments.length > 0}
-                    <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-2.5">
-                        <div class="text-xs font-semibold text-muted-foreground">
-                            Berkas Lampiran ({activeLesson.attachments.length})
+                    <!-- 2. Audio Player Section -->
+                    {#if activeLesson.audio_url}
+                        <div class="p-3 sm:p-4 rounded-2xl border border-border bg-card shadow-xs flex items-center gap-3">
+                            <Headphones class="size-4 text-indigo-600 shrink-0" />
+                            <audio
+                                controls
+                                class="w-full h-8"
+                                src={activeLesson.audio_url}
+                            >
+                                Browser Anda tidak mendukung audio player.
+                            </audio>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            {#each activeLesson.attachments as file}
+                    {/if}
+
+                    <!-- 3. Formatted Text / Reading Content -->
+                    {#if activeLesson.content_text}
+                        <div class="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+                            <div class="prose prose-slate dark:prose-invert max-w-none text-sm leading-relaxed [&_h1]:text-2xl [&_h1]:font-bold [&_h1]:my-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:my-2 [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:my-2 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_blockquote]:border-l-4 [&_blockquote]:border-indigo-500 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-2 [&_blockquote]:text-muted-foreground [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:text-xs [&_code]:text-indigo-600 dark:[&_code]:text-indigo-400 [&_a]:text-indigo-600 [&_a]:underline">
+                                {@html formatLessonContent(activeLesson.content_text)}
+                            </div>
+                        </div>
+                    {/if}
+
+                    <!-- 4. PDF Embed Option -->
+                    {#if activeLesson.pdf_url}
+                        <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-3">
+                            <div class="flex items-center justify-between pb-2 border-b border-border/50 text-xs">
+                                <span class="font-semibold text-foreground">Dokumen PDF Tersemat</span>
                                 <a
-                                    href={file.url}
+                                    href={activeLesson.pdf_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    class="flex items-center justify-between p-2.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-indigo-400/50 transition-all group text-xs"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-muted/80 text-foreground transition-colors"
                                 >
-                                    <div class="flex items-center gap-2 min-w-0">
-                                        {#if file.type === 'excel' || file.name.endsWith('.xlsx') || file.name.endsWith('.csv')}
-                                            <FileSpreadsheet class="size-4 text-emerald-600 shrink-0" />
-                                        {:else}
-                                            <FileText class="size-4 text-indigo-600 shrink-0" />
-                                        {/if}
-                                        <div class="min-w-0">
-                                            <div class="font-medium text-foreground truncate group-hover:text-indigo-600">
-                                                {file.name}
-                                            </div>
-                                            {#if file.size}
-                                                <div class="text-[10px] text-muted-foreground">
-                                                    {file.size}
-                                                </div>
-                                            {/if}
-                                        </div>
-                                    </div>
-                                    <Download class="size-3.5 text-muted-foreground group-hover:text-indigo-600 shrink-0 ml-2" />
+                                    <ExternalLink class="size-3.5" />
+                                    <span>Fullscreen</span>
                                 </a>
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
-
-                <!-- Post-Test Section (Optional) -->
-                {#if activeLesson.post_test?.questions?.length}
-                    <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-4">
-                        <div class="flex items-center justify-between pb-3 border-b border-border/60">
-                            <div class="flex items-center gap-2.5">
-                                <div class="size-7 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold text-xs shrink-0">
-                                    POST
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-foreground">
-                                        {activeLesson.post_test.title || 'Post-Test Evaluasi Akhir'}
-                                    </h3>
-                                    {#if activeLesson.post_test.instructions}
-                                        <p class="text-xs text-muted-foreground">
-                                            {activeLesson.post_test.instructions}
-                                        </p>
-                                    {/if}
-                                </div>
                             </div>
-                            <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-                                Target: {activeLesson.post_test.passing_score ?? 70}%
-                            </span>
-                        </div>
 
-                        {#if !postTestSubmitted}
-                            <div class="space-y-4 pt-1">
-                                {#each activeLesson.post_test.questions as q, qIdx (q.id || qIdx)}
-                                    <div class="p-4 rounded-xl border border-border bg-card space-y-3">
-                                        <div class="text-xs font-semibold text-foreground flex items-start gap-2">
-                                            <span class="size-5 rounded-full bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 text-[11px] font-bold">
-                                                {qIdx + 1}
-                                            </span>
-                                            <span class="leading-relaxed">{q.question}</span>
-                                        </div>
-                                        <div class="space-y-1.5 pl-7">
-                                            {#each q.options as opt, optIdx}
-                                                <label
-                                                    class="flex items-center gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all {postTestAnswers[qIdx] === optIdx ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/40 text-foreground font-semibold shadow-xs' : 'border-border/60 hover:bg-muted/50 text-muted-foreground'}"
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name="post_q_{qIdx}"
-                                                        checked={postTestAnswers[qIdx] === optIdx}
-                                                        onchange={() => (postTestAnswers[qIdx] = optIdx)}
-                                                        class="size-3.5 text-purple-600 focus:ring-purple-500"
-                                                    />
-                                                    <span>{opt}</span>
-                                                </label>
-                                            {/each}
-                                        </div>
-                                    </div>
-                                {/each}
-
-                                <div class="flex justify-end pt-1">
-                                    <button
-                                        type="button"
-                                        onclick={submitPostTest}
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-xs transition-colors"
-                                    >
-                                        <ClipboardCheck class="size-4" />
-                                        <span>Kirim Jawaban Post-Test</span>
-                                    </button>
-                                </div>
+                            <div class="relative w-full h-[500px] rounded-xl overflow-hidden border border-border bg-muted/30">
+                                <iframe
+                                    src="{activeLesson.pdf_url}#toolbar=1"
+                                    class="size-full border-0"
+                                    title="PDF Viewer"
+                                >
+                                    <p class="p-6 text-sm text-center text-muted-foreground">
+                                        Browser Anda tidak mendukung preview PDF langsung. Silakan
+                                        <a href={activeLesson.pdf_url} target="_blank" class="text-indigo-600 underline">klik di sini untuk mengunduh</a>.
+                                    </p>
+                                </iframe>
                             </div>
-                        {:else}
-                            <!-- Result Screen -->
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-4 rounded-xl border {postTestScore >= (activeLesson.post_test.passing_score ?? 70) ? 'border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200' : 'border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200'}">
-                                    <div class="flex items-center gap-3">
-                                        {#if postTestScore >= (activeLesson.post_test.passing_score ?? 70)}
-                                            <CheckCircle2 class="size-6 text-emerald-600 shrink-0" />
-                                            <div>
-                                                <div class="text-sm font-bold">Lulus Post-Test! Skor: {postTestScore}%</div>
-                                                <div class="text-xs opacity-90">Selamat! Anda telah memahami modul ini dengan sangat baik.</div>
-                                            </div>
-                                        {:else}
-                                            <AlertCircle class="size-6 text-amber-600 shrink-0" />
-                                            <div>
-                                                <div class="text-sm font-bold">Hasil Post-Test: {postTestScore}%</div>
-                                                <div class="text-xs opacity-90">Skor belum mencapai target ({activeLesson.post_test.passing_score ?? 70}%). Anda dapat mengulanginya.</div>
-                                            </div>
-                                        {/if}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onclick={resetPostTest}
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs font-semibold hover:bg-muted text-foreground transition-colors shrink-0"
-                                    >
-                                        <RotateCcw class="size-3.5" />
-                                        <span>Ulangi Post-Test</span>
-                                    </button>
-                                </div>
+                        </div>
+                    {/if}
 
-                                <div class="space-y-3 pt-1">
-                                    {#each activeLesson.post_test.questions as q, qIdx}
-                                        {@const isCorrect = postTestAnswers[qIdx] === q.correct_answer}
-                                        <div class="p-3.5 rounded-xl border {isCorrect ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20' : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20'} space-y-2 text-xs">
-                                            <div class="font-semibold text-foreground flex items-center justify-between">
-                                                <span class="flex items-center gap-2">
-                                                    {#if isCorrect}
-                                                        <CheckCircle2 class="size-4 text-emerald-600 shrink-0" />
-                                                    {:else}
-                                                        <X class="size-4 text-rose-600 shrink-0" />
-                                                    {/if}
-                                                    <span>#{qIdx + 1}: {q.question}</span>
-                                                </span>
-                                                <span class="font-bold {isCorrect ? 'text-emerald-600' : 'text-rose-600'}">
-                                                    {isCorrect ? 'Benar (+)' : 'Salah'}
-                                                </span>
-                                            </div>
-                                            <div class="pl-6 space-y-1 text-muted-foreground">
-                                                <div>Pilihan Anda: <span class="font-medium {isCorrect ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300'}">{q.options[postTestAnswers[qIdx]] ?? 'Belum dijawab'}</span></div>
-                                                {#if !isCorrect}
-                                                    <div>Kunci Jawaban: <span class="font-semibold text-emerald-700 dark:text-emerald-300">{q.options[q.correct_answer]}</span></div>
-                                                {/if}
-                                                {#if q.explanation}
-                                                    <div class="p-2.5 rounded-lg bg-card border border-border/60 text-[11px] text-foreground/80 mt-1.5">
-                                                        💡 <span class="font-semibold">Penjelasan:</span> {q.explanation}
+                    <!-- 5. Attachments Files Section -->
+                    {#if activeLesson.attachments && activeLesson.attachments.length > 0}
+                        <div class="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs space-y-2.5">
+                            <div class="text-xs font-semibold text-muted-foreground">
+                                Berkas Lampiran ({activeLesson.attachments.length})
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                {#each activeLesson.attachments as file}
+                                    <a
+                                        href={file.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        class="flex items-center justify-between p-2.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/50 hover:border-indigo-400/50 transition-all group text-xs"
+                                    >
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            {#if file.type === 'excel' || file.name.endsWith('.xlsx') || file.name.endsWith('.csv')}
+                                                <FileSpreadsheet class="size-4 text-emerald-600 shrink-0" />
+                                            {:else}
+                                                <FileText class="size-4 text-indigo-600 shrink-0" />
+                                            {/if}
+                                            <div class="min-w-0">
+                                                <div class="font-medium text-foreground truncate group-hover:text-indigo-600">
+                                                    {file.name}
+                                                </div>
+                                                {#if file.size}
+                                                    <div class="text-[10px] text-muted-foreground">
+                                                        {file.size}
                                                     </div>
                                                 {/if}
                                             </div>
                                         </div>
-                                    {/each}
-                                </div>
+                                        <Download class="size-3.5 text-muted-foreground group-hover:text-indigo-600 shrink-0 ml-2" />
+                                    </a>
+                                {/each}
                             </div>
-                        {/if}
-                    </div>
+                        </div>
+                    {/if}
                 {/if}
 
                 <!-- Bottom Navigation & Completion Action Bar -->
@@ -766,24 +752,36 @@
                         {/if}
                     </div>
 
-                    <!-- Primary Mark As Complete Button -->
-                    <button
-                        type="button"
-                        onclick={toggleLessonCompletion}
-                        disabled={isSubmitting}
-                        class="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer {activeLesson.is_completed ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'}"
-                    >
-                        <CheckCircle2 class="size-4 {activeLesson.is_completed ? 'text-emerald-500' : ''}" />
-                        <span>
-                            {#if isSubmitting}
-                                Menyimpan...
-                            {:else if activeLesson.is_completed}
-                                Selesai
+                    <!-- Mark As Complete Button (only for regular lessons; quizzes auto-complete on submission) -->
+                    {#if !isQuizLesson}
+                        <button
+                            type="button"
+                            onclick={toggleLessonCompletion}
+                            disabled={isSubmitting}
+                            class="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-xs cursor-pointer {activeLesson.is_completed ? 'bg-muted hover:bg-muted/80 text-foreground' : 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'}"
+                        >
+                            <CheckCircle2 class="size-4 {activeLesson.is_completed ? 'text-emerald-500' : ''}" />
+                            <span>
+                                {#if isSubmitting}
+                                    Menyimpan...
+                                {:else if activeLesson.is_completed}
+                                    Selesai
+                                {:else}
+                                    Tandai Selesai (+{activeLesson.points ?? 50} XP)
+                                {/if}
+                            </span>
+                        </button>
+                    {:else}
+                        <div class="text-xs font-semibold text-muted-foreground">
+                            {#if activeLesson.is_completed}
+                                <span class="inline-flex items-center gap-1 text-emerald-600">
+                                    <CheckCircle2 class="size-3.5" /> Evaluasi Selesai (+{activeLesson.points ?? 50} XP)
+                                </span>
                             {:else}
-                                Tandai Selesai (+{activeLesson.points ?? 50} XP)
+                                Kerjakan tes di atas untuk menyelesaikan evaluasi
                             {/if}
-                        </span>
-                    </button>
+                        </div>
+                    {/if}
 
                     <div>
                         {#if nextLesson}
@@ -808,52 +806,76 @@
             {/if}
         </div>
 
-        <!-- Right: Curriculum Sidebar (4 cols) -->
+        <!-- Right: Curriculum Sidebar (4 cols) Grouped by Module -->
         <div class="lg:col-span-4 space-y-4">
             <div class="rounded-2xl border border-border bg-card p-4 shadow-xs sticky top-6">
                 <div class="flex items-center justify-between pb-3 border-b border-border/60">
                     <div>
                         <h3 class="text-sm font-bold text-foreground">
-                            Daftar Pelajaran
+                            Kurikulum Modul
                         </h3>
                         <p class="text-[11px] text-muted-foreground mt-0.5">
                             {course.completed_lessons} dari {course.total_lessons} selesai
                         </p>
                     </div>
                     <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
-                        {lessons.length} Modul
+                        {displayModules.length} Modul
                     </span>
                 </div>
 
-                <!-- Lessons List -->
-                <div class="mt-2.5 space-y-1 max-h-[600px] overflow-y-auto pr-1">
-                    {#each lessons as lesson (lesson.id)}
-                        {@const isActive = lesson.id === activeLesson?.id}
-                        <Link
-                            href="/learn/{course.slug}?lesson={lesson.slug}"
-                            class="flex items-center gap-2.5 p-2.5 rounded-xl text-xs transition-all {isActive ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-950 dark:text-indigo-200 font-semibold' : 'hover:bg-muted/60 text-foreground/80 font-normal'}"
-                        >
-                            <!-- Completion Icon -->
-                            <div class="shrink-0">
-                                {#if lesson.is_completed}
-                                    <CheckCircle2 class="size-4 text-emerald-500" />
-                                {:else if isActive}
-                                    <div class="size-4 rounded-full border-2 border-indigo-600 flex items-center justify-center">
-                                        <div class="size-1.5 rounded-full bg-indigo-600"></div>
-                                    </div>
-                                {:else}
-                                    <Circle class="size-4 text-muted-foreground/30" />
-                                {/if}
+                <!-- Grouped Modules & Lessons List -->
+                <div class="mt-3 space-y-3.5 max-h-[600px] overflow-y-auto pr-1">
+                    {#each displayModules as mod, modIdx (mod.id)}
+                        <div class="rounded-xl border border-border/70 bg-muted/10 overflow-hidden">
+                            <!-- Module Group Header -->
+                            <div class="px-3 py-2 bg-muted/40 border-b border-border/60 flex items-center justify-between text-xs">
+                                <span class="font-bold text-foreground truncate pr-2">
+                                    {mod.title}
+                                </span>
+                                <span class="text-[10px] text-muted-foreground font-semibold shrink-0">
+                                    {mod.completed_count}/{mod.total_lessons}
+                                </span>
                             </div>
 
-                            <!-- Lesson Info -->
-                            <div class="min-w-0 flex-1 truncate">
-                                <span class="text-muted-foreground mr-1">#{lesson.sort_order}</span>
-                                <span class="truncate">{lesson.title}</span>
-                            </div>
+                            <!-- Lessons Inside Module -->
+                            <div class="p-1.5 space-y-1">
+                                {#each mod.lessons as lesson (lesson.id)}
+                                    {@const isActive = lesson.id === activeLesson?.id}
+                                    <Link
+                                        href="/learn/{course.slug}?lesson={lesson.slug}"
+                                        class="flex items-center gap-2 p-2 rounded-lg text-xs transition-all {isActive ? 'bg-indigo-50/90 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-200 font-semibold shadow-2xs' : 'hover:bg-muted/60 text-foreground/80 font-normal'}"
+                                    >
+                                        <div class="shrink-0">
+                                            {#if lesson.is_completed}
+                                                <CheckCircle2 class="size-3.5 text-emerald-500" />
+                                            {:else if isActive}
+                                                <div class="size-3.5 rounded-full border-2 border-indigo-600 flex items-center justify-center">
+                                                    <div class="size-1 rounded-full bg-indigo-600"></div>
+                                                </div>
+                                            {:else}
+                                                <Circle class="size-3.5 text-muted-foreground/30" />
+                                            {/if}
+                                        </div>
 
-                            <span class="text-[11px] text-muted-foreground shrink-0">{lesson.duration_minutes}m</span>
-                        </Link>
+                                        {#if lesson.content_type === 'pre_test'}
+                                            <span class="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 shrink-0">
+                                                Pre
+                                            </span>
+                                        {:else if lesson.content_type === 'post_test'}
+                                            <span class="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 shrink-0">
+                                                Post
+                                            </span>
+                                        {/if}
+
+                                        <div class="min-w-0 flex-1 truncate">
+                                            <span class="truncate">{lesson.title}</span>
+                                        </div>
+
+                                        <span class="text-[10px] text-muted-foreground shrink-0">{lesson.duration_minutes}m</span>
+                                    </Link>
+                                {/each}
+                            </div>
+                        </div>
                     {/each}
                 </div>
             </div>
@@ -871,7 +893,7 @@
     onClose={() => (isCertificateOpen = false)}
 />
 
-<!-- Mobile Curriculum Bottom Sheet -->
+<!-- Mobile Curriculum Bottom Sheet Grouped by Module -->
 {#if isCurriculumSheetOpen}
     <div class="fixed inset-0 z-50 flex items-end justify-center p-0 lg:hidden">
         <button
@@ -890,10 +912,10 @@
             <div class="flex items-center justify-between px-4 py-3 border-b border-border/80 shrink-0">
                 <div class="flex items-center gap-2">
                     <div class="size-7 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
-                        <BookOpen class="size-4" />
+                        <Layers class="size-4" />
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-foreground">Daftar Pelajaran</h3>
+                        <h3 class="text-sm font-bold text-foreground">Kurikulum Kelas</h3>
                         <p class="text-[11px] text-muted-foreground">{course.completed_lessons} dari {course.total_lessons} selesai</p>
                     </div>
                 </div>
@@ -907,36 +929,58 @@
                 </button>
             </div>
 
-            <!-- Lessons List in Bottom Sheet -->
-            <div class="p-3 space-y-1 overflow-y-auto max-h-[calc(85vh-120px)]">
-                {#each lessons as lesson (lesson.id)}
-                    {@const isActive = lesson.id === activeLesson?.id}
-                    <Link
-                        href="/learn/{course.slug}?lesson={lesson.slug}"
-                        onclick={() => (isCurriculumSheetOpen = false)}
-                        class="flex items-center gap-2.5 p-2.5 rounded-xl text-xs transition-all {isActive ? 'bg-indigo-50/80 dark:bg-indigo-950/60 text-indigo-950 dark:text-indigo-200 font-semibold' : 'hover:bg-muted/60 text-foreground/80 font-normal'}"
-                    >
-                        <!-- Completion Icon -->
-                        <div class="shrink-0">
-                            {#if lesson.is_completed}
-                                <CheckCircle2 class="size-4 text-emerald-500" />
-                            {:else if isActive}
-                                <div class="size-4 rounded-full border-2 border-indigo-600 flex items-center justify-center">
-                                    <div class="size-1.5 rounded-full bg-indigo-600"></div>
-                                </div>
-                            {:else}
-                                <Circle class="size-4 text-muted-foreground/30" />
-                            {/if}
+            <!-- Grouped Lessons List in Mobile Bottom Sheet -->
+            <div class="p-3 space-y-3 overflow-y-auto max-h-[calc(85vh-120px)]">
+                {#each displayModules as mod, modIdx (mod.id)}
+                    <div class="rounded-xl border border-border/70 bg-muted/10 overflow-hidden">
+                        <div class="px-3 py-2 bg-muted/40 border-b border-border/60 flex items-center justify-between text-xs">
+                            <span class="font-bold text-foreground truncate pr-2">
+                                {mod.title}
+                            </span>
+                            <span class="text-[10px] text-muted-foreground font-semibold shrink-0">
+                                {mod.completed_count}/{mod.total_lessons}
+                            </span>
                         </div>
 
-                        <!-- Lesson Info -->
-                        <div class="min-w-0 flex-1 truncate">
-                            <span class="text-muted-foreground mr-1">#{lesson.sort_order}</span>
-                            <span class="truncate">{lesson.title}</span>
-                        </div>
+                        <div class="p-1.5 space-y-1">
+                            {#each mod.lessons as lesson (lesson.id)}
+                                {@const isActive = lesson.id === activeLesson?.id}
+                                <Link
+                                    href="/learn/{course.slug}?lesson={lesson.slug}"
+                                    onclick={() => (isCurriculumSheetOpen = false)}
+                                    class="flex items-center gap-2 p-2 rounded-lg text-xs transition-all {isActive ? 'bg-indigo-50/90 dark:bg-indigo-950/70 text-indigo-950 dark:text-indigo-200 font-semibold' : 'hover:bg-muted/60 text-foreground/80 font-normal'}"
+                                >
+                                    <div class="shrink-0">
+                                        {#if lesson.is_completed}
+                                            <CheckCircle2 class="size-3.5 text-emerald-500" />
+                                        {:else if isActive}
+                                            <div class="size-3.5 rounded-full border-2 border-indigo-600 flex items-center justify-center">
+                                                <div class="size-1 rounded-full bg-indigo-600"></div>
+                                            </div>
+                                        {:else}
+                                            <Circle class="size-3.5 text-muted-foreground/30" />
+                                        {/if}
+                                    </div>
 
-                        <span class="text-[11px] text-muted-foreground shrink-0">{lesson.duration_minutes}m</span>
-                    </Link>
+                                    {#if lesson.content_type === 'pre_test'}
+                                        <span class="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 shrink-0">
+                                            Pre
+                                        </span>
+                                    {:else if lesson.content_type === 'post_test'}
+                                        <span class="px-1.5 py-0.2 rounded text-[8px] font-bold uppercase bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 shrink-0">
+                                            Post
+                                        </span>
+                                    {/if}
+
+                                    <div class="min-w-0 flex-1 truncate">
+                                        <span class="truncate">{lesson.title}</span>
+                                    </div>
+
+                                    <span class="text-[10px] text-muted-foreground shrink-0">{lesson.duration_minutes}m</span>
+                                </Link>
+                            {/each}
+                        </div>
+                    </div>
                 {/each}
             </div>
         </div>
